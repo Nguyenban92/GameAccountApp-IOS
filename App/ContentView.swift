@@ -83,33 +83,22 @@ struct ContentView: View {
             // Dark Tactical Carbon background
             Color(red: 0.04, green: 0.06, blue: 0.05).edgesIgnoringSafeArea(.all)
             
-            VStack(spacing: 0) {
+            VStack(spacing: 8) {
                 // Top Header Bar
                 topHeaderView
                     .padding(.horizontal)
-                    .padding(.top, 8)
-                    .padding(.bottom, 6)
+                    .padding(.top, 6)
                 
-                // Horizontal Game Carousel (Square Cover Art + Button Sửa Ảnh/Tên right below)
+                // Horizontal Game Tabs (Chips)
                 gameCarouselView
-                    .padding(.bottom, 8)
-                
-                // Current Game Stats & Auto-Queue Bar
-                if let game = currentGame {
-                    currentGameDashboard(game: game)
-                        .padding(.horizontal)
-                        .padding(.bottom, 8)
-                }
                 
                 // Search & Action Toolbar
                 searchAndActionToolbar
                     .padding(.horizontal)
-                    .padding(.bottom, 4)
                 
                 // Copy Separator Preference Bar
                 copyFormatSelectorBar
                     .padding(.horizontal)
-                    .padding(.bottom, 6)
                 
                 // Account Cards List
                 accountListView
@@ -159,23 +148,23 @@ struct ContentView: View {
         .sheet(isPresented: $showingAutoFillGuide) { autoFillGuideSheetView }
     }
     
-    // MARK: - Top Header View (Tactical E-Sports Theme)
+    // MARK: - Top Header View (Clean & Professional)
     var topHeaderView: some View {
-        HStack {
+        HStack(alignment: .center) {
             HStack(spacing: 8) {
                 ZStack {
                     LinearGradient(colors: [Color(red: 0.0, green: 0.85, blue: 0.55), Color(red: 0.0, green: 0.5, blue: 0.9)], startPoint: .topLeading, endPoint: .bottomTrailing)
-                    Text("🎮").font(.system(size: 16))
+                    Text("🎮").font(.system(size: 15))
                 }
-                .frame(width: 34, height: 34)
-                .cornerRadius(10)
-                .shadow(color: Color(red: 0.0, green: 0.85, blue: 0.55).opacity(0.3), radius: 6, x: 0, y: 2)
+                .frame(width: 32, height: 32)
+                .cornerRadius(9)
                 
-                VStack(alignment: .leading, spacing: 1) {
+                VStack(alignment: .leading, spacing: 0) {
                     Text("QUẢN LÝ TÀI KHOẢN")
                         .font(.system(size: 14, weight: .heavy, design: .rounded))
                         .foregroundColor(.white)
-                    Text("E-Sports Tactical Suite")
+                        .lineLimit(1)
+                    Text("Game Account Suite")
                         .font(.system(size: 9, weight: .medium, design: .monospaced))
                         .foregroundColor(Color(red: 0.0, green: 0.85, blue: 0.55))
                 }
@@ -183,40 +172,76 @@ struct ContentView: View {
             
             Spacer()
             
-            HStack(spacing: 6) {
-                // Nút Liên Hệ Zalo (chỉ có icon Zalo và chữ "Liên Hệ Zalo", bấm vào mở link https://zalo.me/0779977792)
-                Button(action: {
-                    if let url = URL(string: "https://zalo.me/0779977792") {
-                        UIApplication.shared.open(url)
+            // Nút Liên Hệ Zalo - CHỈ 1 NÚT DUY NHẤT, KHÔNG WRAP CHỮ
+            Button(action: {
+                if let url = URL(string: "https://zalo.me/0779977792") {
+                    UIApplication.shared.open(url)
+                }
+            }) {
+                HStack(spacing: 4) {
+                    Image(systemName: "message.fill")
+                    Text("Liên Hệ Zalo")
+                }
+                .font(.system(size: 11, weight: .bold))
+                .foregroundColor(Color(red: 0.0, green: 0.95, blue: 0.65))
+                .padding(.horizontal, 10)
+                .padding(.vertical, 6)
+                .background(Color(red: 0.0, green: 0.8, blue: 0.5).opacity(0.18))
+                .cornerRadius(10)
+                .overlay(RoundedRectangle(cornerRadius: 10).stroke(Color(red: 0.0, green: 0.85, blue: 0.55).opacity(0.4), lineWidth: 1))
+                .fixedSize()
+            }
+        }
+    }
+    
+    // MARK: - Game Tabs (Clean Horizontal Chips)
+    var gameCarouselView: some View {
+        ScrollView(.horizontal, showsIndicators: false) {
+            HStack(spacing: 8) {
+                ForEach(games.indices, id: \.self) { idx in
+                    let g = games[idx]
+                    let isSelected = idx == selectedGameIndex
+                    
+                    Button(action: {
+                        selectedGameIndex = idx
+                        SharedDataManager.shared.saveActiveGameId(g.id)
+                    }) {
+                        HStack(spacing: 5) {
+                            Text(g.title.lowercased().contains("liên quân") ? "⚔️" : (g.title.lowercased().contains("free fire") ? "🔥" : "🎮"))
+                                .font(.system(size: 12))
+                            Text(g.title)
+                                .font(.system(size: 12, weight: isSelected ? .bold : .medium))
+                                .lineLimit(1)
+                            Text("(\(g.accounts.count))")
+                                .font(.system(size: 10, weight: .bold, design: .monospaced))
+                                .opacity(0.85)
+                        }
+                        .foregroundColor(isSelected ? .white : .gray)
+                        .padding(.horizontal, 12)
+                        .padding(.vertical, 7)
+                        .background(isSelected ? Color(red: 0.0, green: 0.75, blue: 0.45) : Color.white.opacity(0.06))
+                        .cornerRadius(20)
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 20)
+                                .stroke(isSelected ? Color(red: 0.0, green: 0.9, blue: 0.6) : Color.white.opacity(0.08), lineWidth: 1)
+                        )
+                        .fixedSize()
                     }
-                }) {
-                    HStack(spacing: 4) {
-                        Image(systemName: "message.fill")
-                        Text("Liên Hệ Zalo")
+                    .contextMenu {
+                        Button(action: { openEditGameModal(game: g) }) {
+                            Label("Sửa thông tin / Đổi tên", systemImage: "pencil")
+                        }
+                        Button(action: {
+                            AppLauncher.shared.launchGame(scheme: g.urlScheme, bundleID: g.bundleID, gameName: g.title) { _, msg in
+                                showToast(msg)
+                            }
+                        }) {
+                            Label("Mở Game Trực Tiếp", systemImage: "arrow.up.forward.app")
+                        }
                     }
-                    .font(.system(size: 11, weight: .bold))
-                    .foregroundColor(Color(red: 0.0, green: 0.9, blue: 0.6))
-                    .padding(.horizontal, 9)
-                    .padding(.vertical, 6)
-                    .background(Color(red: 0.0, green: 0.8, blue: 0.5).opacity(0.18))
-                    .cornerRadius(10)
-                    .overlay(RoundedRectangle(cornerRadius: 10).stroke(Color(red: 0.0, green: 0.85, blue: 0.55).opacity(0.4), lineWidth: 1))
                 }
                 
-                Button(action: { showingAutoFillGuide = true }) {
-                    HStack(spacing: 4) {
-                        Image(systemName: "key.fill")
-                        Text("AutoFill")
-                    }
-                    .font(.system(size: 11, weight: .bold))
-                    .foregroundColor(.yellow)
-                    .padding(.horizontal, 8)
-                    .padding(.vertical, 6)
-                    .background(Color(red: 0.12, green: 0.11, blue: 0.05))
-                    .cornerRadius(10)
-                    .overlay(RoundedRectangle(cornerRadius: 10).stroke(Color.yellow.opacity(0.4), lineWidth: 1))
-                }
-                
+                // Nút Thêm Game Mới
                 Button(action: { openAddGameModal() }) {
                     HStack(spacing: 4) {
                         Image(systemName: "plus")
@@ -224,327 +249,100 @@ struct ContentView: View {
                     }
                     .font(.system(size: 11, weight: .semibold))
                     .foregroundColor(Color(red: 0.0, green: 0.85, blue: 0.55))
-                    .padding(.horizontal, 8)
-                    .padding(.vertical, 6)
-                    .background(Color(red: 0.06, green: 0.09, blue: 0.08))
-                    .cornerRadius(10)
-                    .overlay(RoundedRectangle(cornerRadius: 10).stroke(Color(red: 0.0, green: 0.85, blue: 0.55).opacity(0.3), lineWidth: 1))
-                }
-            }
-        }
-    }
-    
-    // MARK: - Game Carousel View (SQUARE 1:1)
-    var gameCarouselView: some View {
-        VStack(alignment: .leading, spacing: 6) {
-            HStack {
-                Text("DANH SÁCH GAME (Nhấp 2 lần để sửa)")
-                    .font(.system(size: 10, weight: .bold, design: .rounded))
-                    .foregroundColor(.gray)
-                    .padding(.horizontal)
-                Spacer()
-            }
-            
-            ScrollView(.horizontal, showsIndicators: false) {
-                HStack(spacing: 12) {
-                    ForEach(games.indices, id: \.self) { idx in
-                        let g = games[idx]
-                        let isSelected = idx == selectedGameIndex
-                        
-                        VStack(spacing: 5) {
-                            // Square Game Cover Tile
-                            ZStack(alignment: .bottomTrailing) {
-                                if let data = g.customImageData, let uiImg = UIImage(data: data) {
-                                    Image(uiImage: uiImg)
-                                        .resizable()
-                                        .scaledToFill()
-                                        .frame(width: 80, height: 80)
-                                        .clipped()
-                                } else {
-                                    LinearGradient(colors: [Color.indigo.opacity(0.8), Color.cyan.opacity(0.7)], startPoint: .topLeading, endPoint: .bottomTrailing)
-                                        .frame(width: 80, height: 80)
-                                        .overlay(Image(systemName: g.icon).font(.title).foregroundColor(.white.opacity(0.8)))
-                                }
-                                
-                                Text("\(g.totalAccounts)")
-                                    .font(.system(size: 9, weight: .bold, design: .monospaced))
-                                    .foregroundColor(.white)
-                                    .padding(.horizontal, 5)
-                                    .padding(.vertical, 2)
-                                    .background(Color.black.opacity(0.75))
-                                    .cornerRadius(4)
-                                    .padding(4)
-                            }
-                            .cornerRadius(16)
-                            .overlay(
-                                RoundedRectangle(cornerRadius: 16)
-                                    .stroke(isSelected ? Color.cyan : Color.white.opacity(0.12), lineWidth: isSelected ? 2 : 1)
-                            )
-                            .shadow(color: isSelected ? Color.cyan.opacity(0.4) : Color.clear, radius: 8, x: 0, y: 2)
-                            // 1 tap to select, double tap to open edit
-                            .onTapGesture(count: 2) {
-                                selectedGameIndex = idx
-                                openEditGameModal(game: g)
-                            }
-                            .onTapGesture(count: 1) {
-                                selectedGameIndex = idx
-                                SharedDataManager.shared.saveActiveGameId(g.id)
-                            }
-                            
-                            // Game Title
-                            Text(g.title)
-                                .font(.system(size: 11, weight: .bold))
-                                .foregroundColor(isSelected ? .cyan : .white)
-                                .lineLimit(1)
-                                .frame(width: 84)
-                            
-                            // Button "Sửa Ảnh / Tên" directly below the square image
-                            Button(action: {
-                                selectedGameIndex = idx
-                                openEditGameModal(game: g)
-                            }) {
-                                Text("Sửa ✎")
-                                    .font(.system(size: 9, weight: .semibold))
-                                    .foregroundColor(.cyan)
-                                    .padding(.horizontal, 8)
-                                    .padding(.vertical, 2)
-                                    .background(Color.cyan.opacity(0.15))
-                                    .cornerRadius(6)
-                                    .overlay(RoundedRectangle(cornerRadius: 6).stroke(Color.cyan.opacity(0.3), lineWidth: 0.8))
-                            }
-                        }
-                    }
-                    
-                    // Add Game Tile
-                    Button(action: { openAddGameModal() }) {
-                        VStack(spacing: 6) {
-                            ZStack {
-                                RoundedRectangle(cornerRadius: 16)
-                                    .stroke(style: StrokeStyle(lineWidth: 1.5, dash: [4]))
-                                    .foregroundColor(Color.cyan.opacity(0.5))
-                                    .frame(width: 80, height: 80)
-                                
-                                Image(systemName: "plus")
-                                    .font(.title2)
-                                    .foregroundColor(.cyan)
-                            }
-                            Text("Thêm Game")
-                                .font(.system(size: 10, weight: .semibold))
-                                .foregroundColor(.gray)
-                        }
-                    }
-                }
-                .padding(.horizontal)
-            }
-        }
-    }
-    
-    // MARK: - Current Game Dashboard & Add Account Button
-    func currentGameDashboard(game: GameProfile) -> some View {
-        VStack(spacing: 8) {
-            // Selected Game Action Bar: Shows target game title, auto-open button, and [+ Tạo Acc]
-            HStack {
-                HStack(spacing: 6) {
-                    Text("Đang chọn:")
-                        .font(.system(size: 11))
-                        .foregroundColor(.gray)
-                    Text(game.title)
-                        .font(.system(size: 13, weight: .bold))
-                        .foregroundColor(.cyan)
-                }
-                
-                Spacer()
-                
-                // Button Launch Game Directly
-                Button(action: {
-                    AppLauncher.shared.launchGame(scheme: game.urlScheme, bundleID: game.bundleID, gameName: game.title) { success, msg in
-                        showToast(msg)
-                    }
-                }) {
-                    HStack(spacing: 3) {
-                        Image(systemName: "arrow.up.forward.app.fill")
-                        Text("Mở Game")
-                    }
-                    .font(.system(size: 10, weight: .bold))
-                    .foregroundColor(.green)
-                    .padding(.horizontal, 8)
-                    .padding(.vertical, 5)
-                    .background(Color.green.opacity(0.15))
-                    .cornerRadius(8)
-                    .overlay(RoundedRectangle(cornerRadius: 8).stroke(Color.green.opacity(0.4), lineWidth: 1))
-                }
-                
-                // Button Add Account to this specific game
-                Button(action: { openAddAccountModal() }) {
-                    HStack(spacing: 4) {
-                        Image(systemName: "person.badge.plus.fill")
-                        Text("+ Tạo Acc")
-                    }
-                    .font(.system(size: 11, weight: .bold))
-                    .foregroundColor(.white)
                     .padding(.horizontal, 10)
-                    .padding(.vertical, 5)
-                    .background(LinearGradient(colors: [Color.cyan, Color.blue], startPoint: .leading, endPoint: .trailing))
-                    .cornerRadius(8)
-                    .shadow(color: Color.blue.opacity(0.4), radius: 4, x: 0, y: 1)
+                    .padding(.vertical, 7)
+                    .background(Color.white.opacity(0.05))
+                    .cornerRadius(20)
+                    .overlay(RoundedRectangle(cornerRadius: 20).stroke(Color.white.opacity(0.1), lineWidth: 1))
+                    .fixedSize()
                 }
             }
-            .padding(.horizontal, 4)
-            
-            // Stats summary row
-            HStack(spacing: 8) {
-                statBox(title: "Tổng số", value: "\(game.totalAccounts)", color: .cyan)
-                statBox(title: "Đã xong", value: "\(game.successCount)", color: .green)
-                statBox(title: "Sai MK", value: "\(game.wrongPassCount)", color: .orange)
-                statBox(title: "Lỗi/Khóa", value: "\(game.failedCount)", color: .red)
-            }
-            
-            // Auto Runner Banner
-            autoRunnerPill(game: game)
+            .padding(.horizontal)
         }
     }
     
-    func statBox(title: String, value: String, color: Color) -> some View {
-        VStack(spacing: 2) {
-            Text(title)
-                .font(.system(size: 9, weight: .medium))
-                .foregroundColor(.gray)
-            Text(value)
-                .font(.system(size: 14, weight: .bold, design: .monospaced))
-                .foregroundColor(color)
-        }
-        .frame(maxWidth: .infinity)
-        .padding(.vertical, 6)
-        .background(Color(red: 0.07, green: 0.09, blue: 0.15))
-        .cornerRadius(10)
-        .overlay(RoundedRectangle(cornerRadius: 10).stroke(color.opacity(0.2), lineWidth: 1))
-    }
-    
-    func autoRunnerPill(game: GameProfile) -> some View {
-        let runningAccount = getActiveQueueAccount(game: game)
-        
-        return VStack(spacing: 6) {
-            HStack {
-                HStack(spacing: 6) {
-                    Circle().fill(Color.green).frame(width: 6, height: 6)
-                    Text("HÀNG ĐỢI AUTO-LOGIN")
-                        .font(.system(size: 10, weight: .bold, design: .rounded))
-                        .foregroundColor(.green)
-                }
-                Spacer()
-                Text("Acc #\(game.currentQueueIndex + 1)/\(max(game.totalAccounts, 1))")
-                    .font(.system(size: 10, weight: .semibold, design: .monospaced))
-                    .foregroundColor(.gray)
-            }
-            
-            if let acc = runningAccount {
-                HStack {
-                    Text("Kế tiếp: ")
-                        .font(.system(size: 11))
-                        .foregroundColor(.gray)
-                    Text(acc.username)
-                        .font(.system(size: 12, weight: .bold, design: .monospaced))
-                        .foregroundColor(.cyan)
-                    Spacer()
-                    Button("Mở Game & Login ➔") {
-                        triggerLogin(acc: acc, game: game)
-                    }
-                    .font(.system(size: 10, weight: .bold))
-                    .foregroundColor(.white)
-                    .padding(.horizontal, 8)
-                    .padding(.vertical, 4)
-                    .background(Color.cyan)
-                    .cornerRadius(6)
-                }
-            } else {
-                Text("Đã hoàn tất toàn bộ hàng đợi của game này!")
-                    .font(.system(size: 11, weight: .medium))
-                    .foregroundColor(.yellow)
-            }
-            
-            // 3 Quick Action Buttons
-            HStack(spacing: 6) {
-                Button(action: { advanceQueue(status: "Thành công") }) {
-                    Label("Thành công", systemImage: "checkmark.circle.fill")
-                        .font(.system(size: 11, weight: .bold))
-                        .foregroundColor(.white)
-                        .frame(maxWidth: .infinity)
-                        .padding(.vertical, 6)
-                        .background(Color.green.opacity(0.85))
-                        .cornerRadius(8)
-                }
-                
-                Button(action: { advanceQueue(status: "Sai mật khẩu") }) {
-                    Label("Sai MK", systemImage: "exclamationmark.triangle.fill")
-                        .font(.system(size: 11, weight: .bold))
-                        .foregroundColor(.white)
-                        .frame(maxWidth: .infinity)
-                        .padding(.vertical, 6)
-                        .background(Color.orange.opacity(0.85))
-                        .cornerRadius(8)
-                }
-                
-                Button(action: { advanceQueue(status: "Lỗi/Khóa") }) {
-                    Label("Lỗi", systemImage: "xmark.octagon.fill")
-                        .font(.system(size: 11, weight: .bold))
-                        .foregroundColor(.white)
-                        .frame(maxWidth: .infinity)
-                        .padding(.vertical, 6)
-                        .background(Color.red.opacity(0.85))
-                        .cornerRadius(8)
-                }
-            }
-        }
-        .padding(10)
-        .background(
-            LinearGradient(colors: [Color(red: 0.05, green: 0.12, blue: 0.2), Color(red: 0.07, green: 0.09, blue: 0.15)], startPoint: .topLeading, endPoint: .bottomTrailing)
-        )
-        .cornerRadius(14)
-        .overlay(RoundedRectangle(cornerRadius: 14).stroke(Color.cyan.opacity(0.4), lineWidth: 1))
-    }
-    
-    // MARK: - Search & Action Toolbar
+    // MARK: - Search & Action Toolbar (Clean Unified Row)
     var searchAndActionToolbar: some View {
         HStack(spacing: 8) {
-            HStack {
-                Image(systemName: "magnifyingglass").foregroundColor(.gray).font(.caption)
-                TextField("Tìm username hoặc server...", text: $searchText)
+            // Search Field
+            HStack(spacing: 6) {
+                Image(systemName: "magnifyingglass")
+                    .foregroundColor(.gray)
+                    .font(.caption)
+                TextField("Tìm tài khoản...", text: $searchText)
                     .font(.system(size: 12))
                     .foregroundColor(.white)
             }
             .padding(.horizontal, 10)
             .padding(.vertical, 7)
-            .background(Color(red: 0.08, green: 0.11, blue: 0.18))
+            .background(Color.white.opacity(0.06))
             .cornerRadius(10)
             
+            // Nhập TXT Button
             Button(action: { showingImportSheet = true }) {
-                HStack(spacing: 3) {
+                HStack(spacing: 4) {
                     Image(systemName: "square.and.arrow.down")
                     Text("Nhập TXT")
                 }
-                .font(.system(size: 11, weight: .semibold))
-                .foregroundColor(.cyan)
-                .padding(.horizontal, 8)
+                .font(.system(size: 11, weight: .bold))
+                .foregroundColor(.black)
+                .padding(.horizontal, 10)
                 .padding(.vertical, 7)
-                .background(Color(red: 0.08, green: 0.11, blue: 0.18))
+                .background(Color(red: 0.0, green: 0.85, blue: 0.55))
                 .cornerRadius(10)
+                .fixedSize()
             }
             
-            Button(action: { showingExportSheet = true }) {
-                Image(systemName: "square.and.arrow.up")
-                    .font(.system(size: 13, weight: .semibold))
-                    .foregroundColor(.green)
-                    .padding(8)
-                    .background(Color(red: 0.08, green: 0.11, blue: 0.18))
-                    .cornerRadius(10)
+            // + Thêm Nick Button
+            Button(action: { openAddAccountModal() }) {
+                HStack(spacing: 3) {
+                    Image(systemName: "plus")
+                    Text("Nick")
+                }
+                .font(.system(size: 11, weight: .bold))
+                .foregroundColor(.white)
+                .padding(.horizontal, 9)
+                .padding(.vertical, 7)
+                .background(Color.white.opacity(0.08))
+                .cornerRadius(10)
+                .overlay(RoundedRectangle(cornerRadius: 10).stroke(Color.white.opacity(0.12), lineWidth: 1))
+                .fixedSize()
             }
             
-            Button(action: { showingLogsSheet = true }) {
-                Image(systemName: "list.bullet.rectangle.portrait")
-                    .font(.system(size: 13, weight: .semibold))
-                    .foregroundColor(.purple)
-                    .padding(8)
-                    .background(Color(red: 0.08, green: 0.11, blue: 0.18))
+            // Menu ... (Mở game, Xuất File, Nhật ký, AutoFill)
+            Menu {
+                if let g = currentGame {
+                    Button(action: {
+                        AppLauncher.shared.launchGame(scheme: g.urlScheme, bundleID: g.bundleID, gameName: g.title) { _, msg in
+                            showToast(msg)
+                        }
+                    }) {
+                        Label("Mở Game: \(g.title)", systemImage: "arrow.up.forward.app")
+                    }
+                    
+                    Button(action: { openEditGameModal(game: g) }) {
+                        Label("Sửa Cấu Hình Game", systemImage: "pencil")
+                    }
+                }
+                
+                Button(action: { showingExportSheet = true }) {
+                    Label("Xuất File / Apple Passwords", systemImage: "square.and.arrow.up")
+                }
+                
+                Button(action: { showingLogsSheet = true }) {
+                    Label("Nhật Ký Đăng Nhập", systemImage: "clock")
+                }
+                
+                Button(action: { showingAutoFillGuide = true }) {
+                    Label("Hướng Dẫn Bàn Phím", systemImage: "key.fill")
+                }
+            } label: {
+                Image(systemName: "ellipsis")
+                    .font(.system(size: 13, weight: .bold))
+                    .foregroundColor(.gray)
+                    .padding(.horizontal, 8)
+                    .padding(.vertical, 7)
+                    .background(Color.white.opacity(0.06))
                     .cornerRadius(10)
             }
         }
@@ -631,124 +429,133 @@ struct ContentView: View {
     }
     
     func accountCard(acc: GameAccount, index: Int, isCurrentInQueue: Bool) -> some View {
-        VStack(spacing: 8) {
-            HStack(alignment: .top) {
-                VStack(alignment: .leading, spacing: 3) {
-                    HStack(spacing: 6) {
-                        // Số thứ tự tài khoản
-                        Text("#\(index)")
-                            .font(.system(size: 11, weight: .heavy, design: .monospaced))
-                            .foregroundColor(Color(red: 0.0, green: 0.9, blue: 0.55))
-                            .padding(.horizontal, 6)
-                            .padding(.vertical, 2)
-                            .background(Color(red: 0.0, green: 0.8, blue: 0.5).opacity(0.18))
-                            .cornerRadius(6)
-                        
-                        Text(acc.username)
-                            .font(.system(size: 14, weight: .bold, design: .monospaced))
-                            .foregroundColor(.white)
-                        
-                        statusBadge(status: acc.status, isQueue: isCurrentInQueue)
-                    }
-                    
-                    Text("Pass: ••••••••••• (Chạm để copy pass)")
-                        .font(.system(size: 11, weight: .regular, design: .monospaced))
-                        .foregroundColor(.gray)
-                        .onTapGesture {
-                            UIPasteboard.general.string = acc.password
-                            showToast("Đã copy riêng Pass: \(acc.password)")
-                        }
-                }
+        VStack(spacing: 9) {
+            // Hàng 1: Thứ tự, Tên tài khoản, Trạng thái, Nút Sửa & Xóa
+            HStack(spacing: 6) {
+                Text("#\(index)")
+                    .font(.system(size: 12, weight: .heavy, design: .monospaced))
+                    .foregroundColor(Color(red: 0.0, green: 0.95, blue: 0.6))
+                    .padding(.horizontal, 6)
+                    .padding(.vertical, 2)
+                    .background(Color(red: 0.0, green: 0.8, blue: 0.5).opacity(0.18))
+                    .cornerRadius(6)
+                    .fixedSize()
+                
+                Text(acc.username)
+                    .font(.system(size: 15, weight: .bold, design: .monospaced))
+                    .foregroundColor(.white)
+                    .lineLimit(1)
+                
+                statusBadge(status: acc.status, isQueue: isCurrentInQueue)
+                    .fixedSize()
                 
                 Spacer()
                 
-                HStack(spacing: 5) {
-                    // Quick Copy Credentials Button
-                    Button(action: {
-                        let formatted = getFormattedCredentials(acc: acc)
-                        UIPasteboard.general.string = formatted
-                        showToast("Đã copy: \(formatted)")
-                    }) {
-                        HStack(spacing: 2) {
-                            Image(systemName: "doc.on.doc.fill")
-                            Text("Copy")
-                        }
-                        .font(.system(size: 10, weight: .bold))
-                        .foregroundColor(Color(red: 0.0, green: 0.9, blue: 0.55))
-                        .padding(.horizontal, 7)
-                        .padding(.vertical, 4)
-                        .background(Color(red: 0.0, green: 0.8, blue: 0.5).opacity(0.15))
-                        .cornerRadius(6)
-                        .overlay(RoundedRectangle(cornerRadius: 6).stroke(Color(red: 0.0, green: 0.85, blue: 0.55).opacity(0.35), lineWidth: 1))
-                    }
-                    
-                    // Sửa thông tin tài khoản
-                    Button(action: { openEditAccountModal(acc: acc) }) {
-                        Image(systemName: "pencil")
-                            .font(.system(size: 11, weight: .bold))
-                            .foregroundColor(.yellow)
-                            .padding(6)
-                            .background(Color.yellow.opacity(0.15))
-                            .cornerRadius(8)
-                            .overlay(RoundedRectangle(cornerRadius: 8).stroke(Color.yellow.opacity(0.3), lineWidth: 1))
-                    }
-                    
-                    Button(action: {
-                        if let g = currentGame {
-                            triggerLogin(acc: acc, game: g)
-                        }
-                    }) {
-                        HStack(spacing: 3) {
-                            Text("Login")
-                            Image(systemName: "arrow.right")
-                        }
+                Button(action: { openEditAccountModal(acc: acc) }) {
+                    Image(systemName: "pencil")
                         .font(.system(size: 11, weight: .bold))
-                        .foregroundColor(Color(red: 0.0, green: 0.9, blue: 0.55))
-                        .padding(.horizontal, 9)
-                        .padding(.vertical, 4)
-                        .background(Color(red: 0.0, green: 0.8, blue: 0.5).opacity(0.15))
-                        .cornerRadius(8)
-                        .overlay(RoundedRectangle(cornerRadius: 8).stroke(Color(red: 0.0, green: 0.85, blue: 0.55).opacity(0.3), lineWidth: 1))
-                    }
-                    
-                    Button(action: { deleteAccount(acc) }) {
-                        Image(systemName: "trash")
-                            .font(.caption)
-                            .foregroundColor(.gray)
-                            .padding(6)
-                    }
+                        .foregroundColor(.yellow)
+                        .padding(6)
+                        .background(Color.yellow.opacity(0.15))
+                        .clipShape(Circle())
                 }
+                .fixedSize()
+                
+                Button(action: { deleteAccount(acc) }) {
+                    Image(systemName: "trash")
+                        .font(.system(size: 11))
+                        .foregroundColor(.gray.opacity(0.6))
+                        .padding(6)
+                        .background(Color.white.opacity(0.04))
+                        .clipShape(Circle())
+                }
+                .fixedSize()
             }
             
-            Divider().background(Color.white.opacity(0.08))
-            
+            // Hàng 2: Mật khẩu (chạm để chép), Server & Rank
             HStack {
-                Text("Server: \(acc.server) • \(acc.levelOrRank)")
+                HStack(spacing: 4) {
+                    Text("MK:")
+                        .font(.system(size: 11))
+                        .foregroundColor(.gray)
+                    Text("•••••••••••")
+                        .font(.system(size: 12, weight: .semibold, design: .monospaced))
+                        .foregroundColor(.white.opacity(0.85))
+                        .tracking(1)
+                    Text("(chép pass)")
+                        .font(.system(size: 10))
+                        .foregroundColor(Color(red: 0.0, green: 0.85, blue: 0.55).opacity(0.8))
+                }
+                .onTapGesture {
+                    UIPasteboard.general.string = acc.password
+                    showToast("Đã chép pass: \(acc.password)")
+                }
+                
+                Spacer()
+                
+                if !acc.levelOrRank.isEmpty && acc.levelOrRank != "Lv. 1" {
+                    Text(acc.levelOrRank)
+                        .font(.system(size: 10, weight: .semibold))
+                        .foregroundColor(Color(red: 1.0, green: 0.8, blue: 0.3))
+                        .lineLimit(1)
+                }
+                
+                Text(acc.server)
                     .font(.system(size: 10))
                     .foregroundColor(.gray)
-                Spacer()
-                if let last = acc.lastLogin {
-                    Text(last, style: .relative)
-                        .font(.system(size: 9))
-                        .foregroundColor(.gray)
-                } else {
-                    Text("Chưa đăng nhập")
-                        .font(.system(size: 9))
-                        .foregroundColor(.gray)
+                    .lineLimit(1)
+            }
+            
+            Divider().background(Color.white.opacity(0.06))
+            
+            // Hàng 3: 2 Nút bấm to bản rộng rãi, không bao giờ bị rớt dòng
+            HStack(spacing: 8) {
+                // Nút Copy ID Pass (định dạng theo cài đặt: 1 space hoặc |)
+                Button(action: {
+                    let formatted = getFormattedCredentials(acc: acc)
+                    UIPasteboard.general.string = formatted
+                    showToast("Đã copy: \(formatted)")
+                }) {
+                    HStack(spacing: 5) {
+                        Image(systemName: "doc.on.doc.fill")
+                        Text("Copy ID Pass")
+                    }
+                    .font(.system(size: 12, weight: .bold))
+                    .foregroundColor(Color(red: 0.0, green: 0.9, blue: 0.6))
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 8)
+                    .background(Color(red: 0.0, green: 0.8, blue: 0.5).opacity(0.15))
+                    .cornerRadius(8)
+                    .overlay(RoundedRectangle(cornerRadius: 8).stroke(Color(red: 0.0, green: 0.85, blue: 0.55).opacity(0.35), lineWidth: 1))
+                }
+                
+                // Nút Đăng Nhập trực tiếp
+                Button(action: {
+                    if let g = currentGame { triggerLogin(acc: acc, game: g) }
+                }) {
+                    HStack(spacing: 4) {
+                        Image(systemName: "play.fill")
+                        Text("Đăng Nhập")
+                    }
+                    .font(.system(size: 12, weight: .bold))
+                    .foregroundColor(.black)
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 8)
+                    .background(Color(red: 0.0, green: 0.88, blue: 0.55))
+                    .cornerRadius(8)
+                    .shadow(color: Color(red: 0.0, green: 0.88, blue: 0.55).opacity(0.3), radius: 4, x: 0, y: 1)
                 }
             }
         }
         .padding(12)
         .background(Color(red: 0.06, green: 0.09, blue: 0.08))
-        .cornerRadius(12)
+        .cornerRadius(14)
         .overlay(
-            RoundedRectangle(cornerRadius: 12)
+            RoundedRectangle(cornerRadius: 14)
                 .stroke(isCurrentInQueue ? Color(red: 0.0, green: 0.9, blue: 0.55) : Color.white.opacity(0.06), lineWidth: isCurrentInQueue ? 1.5 : 1)
         )
         .shadow(color: isCurrentInQueue ? Color(red: 0.0, green: 0.9, blue: 0.55).opacity(0.25) : Color.clear, radius: 8, x: 0, y: 2)
-        .onTapGesture(count: 2) {
-            openEditAccountModal(acc: acc)
-        }
+        .onTapGesture(count: 2) { openEditAccountModal(acc: acc) }
     }
     
     func statusBadge(status: String, isQueue: Bool) -> some View {
@@ -775,6 +582,7 @@ struct ContentView: View {
             .background(color.opacity(0.15))
             .cornerRadius(4)
             .overlay(RoundedRectangle(cornerRadius: 4).stroke(color.opacity(0.3), lineWidth: 0.8))
+            .fixedSize()
     }
     
     // MARK: - Logic Methods
