@@ -6,3 +6,4 @@ xcuserdata/
 *.ipa
 Payload/
 .DS_Store
+.agent/
