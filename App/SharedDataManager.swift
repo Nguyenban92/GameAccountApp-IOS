@@ -2,6 +2,29 @@ import Foundation
 
 // MARK: - Models
 
+public struct PresetGame: Identifiable {
+    public var id = UUID()
+    public var name: String
+    public var scheme: String
+    public var icon: String
+    
+    public init(name: String, scheme: String, icon: String) {
+        self.name = name
+        self.scheme = scheme
+        self.icon = icon
+    }
+}
+
+public let PRESET_GAMES: [PresetGame] = [
+    PresetGame(name: "Liên Quân Mobile", scheme: "lienquanmobile://", icon: "shield.lefthalf.filled"),
+    PresetGame(name: "Võ Lâm Truyền Kỳ", scheme: "volam://", icon: "flame.fill"),
+    PresetGame(name: "Tốc Chiến (Wild Rift)", scheme: "riotgames://", icon: "bolt.fill"),
+    PresetGame(name: "Free Fire", scheme: "freefire://", icon: "cross.fill"),
+    PresetGame(name: "PUBG Mobile", scheme: "igmobile://", icon: "scope"),
+    PresetGame(name: "Roblox", scheme: "roblox://", icon: "cube.fill"),
+    PresetGame(name: "Genshin Impact", scheme: "genshinimpact://", icon: "sparkles")
+]
+
 public struct LoginLog: Identifiable, Codable {
     public var id = UUID()
     public var timestamp = Date()
@@ -42,17 +65,19 @@ public struct GameProfile: Identifiable, Codable {
     public var id = UUID()
     public var title: String
     public var server: String
-    public var icon: String // Icon default identifier
-    public var customImageData: Data? // Custom cover art uploaded by user
+    public var icon: String
+    public var urlScheme: String? // URL Scheme để tự động mở game khi bấm Login (vd: lienquanmobile://)
+    public var customImageData: Data?
     public var accounts: [GameAccount]
     public var currentQueueIndex: Int
     public var logs: [LoginLog]
     
-    public init(id: UUID = UUID(), title: String, server: String = "Asia", icon: String = "gamecontroller.fill", customImageData: Data? = nil, accounts: [GameAccount] = [], currentQueueIndex: Int = 0, logs: [LoginLog] = []) {
+    public init(id: UUID = UUID(), title: String, server: String = "Asia", icon: String = "gamecontroller.fill", urlScheme: String? = nil, customImageData: Data? = nil, accounts: [GameAccount] = [], currentQueueIndex: Int = 0, logs: [LoginLog] = []) {
         self.id = id
         self.title = title
         self.server = server
         self.icon = icon
+        self.urlScheme = urlScheme
         self.customImageData = customImageData
         self.accounts = accounts
         self.currentQueueIndex = currentQueueIndex
@@ -75,8 +100,7 @@ public class SharedDataManager {
     private let gamesKey = "SavedGameProfiles"
     private let activeGameIdKey = "ActiveGameProfileId"
     
-    // Safe storage with standard fallback if App Group is not available (e.g. eSign without entitlement)
-    private var storage: UserDefaults {
+    public var storage: UserDefaults {
         if let groupDefaults = UserDefaults(suiteName: appGroupSuite) {
             return groupDefaults
         }
@@ -95,33 +119,35 @@ public class SharedDataManager {
            !decoded.isEmpty {
             return decoded
         }
-        // Initial sample games if empty
+        // Initial sample games
         let initialGames = [
-            GameProfile(
-                title: "Cyber Warriors",
-                server: "Asia",
-                icon: "bolt.shield.fill",
-                accounts: [
-                    GameAccount(username: "ShadowBlade", password: "Pass12345@", server: "Asia", levelOrRank: "Lv. 82", status: "Chờ đăng nhập"),
-                    GameAccount(username: "CyberNinja99", password: "NinjaSecure#9", server: "Asia", levelOrRank: "Lv. 75", status: "Chờ đăng nhập"),
-                    GameAccount(username: "MechaGhost", password: "GhostPass2026", server: "Asia", levelOrRank: "Lv. 60", status: "Chờ đăng nhập")
-                ]
-            ),
             GameProfile(
                 title: "Liên Quân Mobile",
                 server: "Việt Nam",
                 icon: "shield.lefthalf.filled",
+                urlScheme: "lienquanmobile://",
                 accounts: [
                     GameAccount(username: "AthanorPro", password: "LienQuan#2026", server: "VN", levelOrRank: "Cao Thủ", status: "Chờ đăng nhập"),
-                    GameAccount(username: "Valhein69", password: "XạThủGank#1", server: "VN", levelOrRank: "Tinh Anh", status: "Chờ đăng nhập")
+                    GameAccount(username: "Valhein69", password: "XaThuGank#1", server: "VN", levelOrRank: "Tinh Anh", status: "Chờ đăng nhập")
                 ]
             ),
             GameProfile(
-                title: "Fantasy Arena",
-                server: "Global",
+                title: "Võ Lâm Truyền Kỳ",
+                server: "Biện Kinh",
                 icon: "flame.fill",
+                urlScheme: "volam://",
                 accounts: [
-                    GameAccount(username: "MageMaster99", password: "MagicSpell!88", server: "Global", levelOrRank: "Diamond IV", status: "Chờ đăng nhập")
+                    GameAccount(username: "VoLamBangChu", password: "ThienHaVoSong#1", server: "S1", levelOrRank: "Lv. 89", status: "Chờ đăng nhập")
+                ]
+            ),
+            GameProfile(
+                title: "Cyber Warriors",
+                server: "Asia",
+                icon: "bolt.shield.fill",
+                urlScheme: nil,
+                accounts: [
+                    GameAccount(username: "ShadowBlade", password: "Pass12345@", server: "Asia", levelOrRank: "Lv. 82", status: "Chờ đăng nhập"),
+                    GameAccount(username: "CyberNinja99", password: "NinjaSecure#9", server: "Asia", levelOrRank: "Lv. 75", status: "Chờ đăng nhập")
                 ]
             )
         ]

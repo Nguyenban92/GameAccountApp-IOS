@@ -16,6 +16,7 @@ targets:
         INFOPLIST_KEY_UIApplicationSceneManifest_Generation: "YES"
         INFOPLIST_KEY_UILaunchScreen_Generation: "YES"
         INFOPLIST_KEY_NSPhotoLibraryUsageDescription: "Ứng dụng cần quyền truy cập ảnh để bạn chọn ảnh đại diện cho các tựa game."
+        INFOPLIST_KEY_LSApplicationQueriesSchemes: "lienquanmobile garena freefire roblox igmobile riotgames genshinimpact volam"
         # Bật App Groups cho App chính
         CODE_SIGN_ENTITLEMENTS: "App/GameAccountApp.entitlements"
 

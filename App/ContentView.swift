@@ -19,7 +19,7 @@ struct ContentView: View {
     // Temporary variables for Game Creation / Edit
     @State private var tempGameTitle = ""
     @State private var tempGameServer = "Asia"
-    @State private var tempGameIcon = "gamecontroller.fill"
+    @State private var tempGameScheme = ""
     @State private var tempSelectedImage: UIImage? = nil
     
     // Temporary variables for Account Creation
@@ -64,7 +64,7 @@ struct ContentView: View {
             Color(red: 0.04, green: 0.05, blue: 0.08).edgesIgnoringSafeArea(.all)
             
             VStack(spacing: 0) {
-                // Top Header Bar (Only App title & + Game button)
+                // Top Header Bar
                 topHeaderView
                     .padding(.horizontal)
                     .padding(.top, 8)
@@ -158,13 +158,17 @@ struct ContentView: View {
             
             HStack(spacing: 8) {
                 Button(action: { showingAutoFillGuide = true }) {
-                    Image(systemName: "key.fill")
-                        .font(.system(size: 12))
-                        .foregroundColor(.yellow)
-                        .padding(7)
-                        .background(Color(red: 0.1, green: 0.1, blue: 0.15))
-                        .cornerRadius(10)
-                        .overlay(RoundedRectangle(cornerRadius: 10).stroke(Color.yellow.opacity(0.3), lineWidth: 1))
+                    HStack(spacing: 4) {
+                        Image(systemName: "key.fill")
+                        Text("AutoFill")
+                    }
+                    .font(.system(size: 11, weight: .bold))
+                    .foregroundColor(.yellow)
+                    .padding(.horizontal, 9)
+                    .padding(.vertical, 6)
+                    .background(Color(red: 0.12, green: 0.11, blue: 0.05))
+                    .cornerRadius(10)
+                    .overlay(RoundedRectangle(cornerRadius: 10).stroke(Color.yellow.opacity(0.4), lineWidth: 1))
                 }
                 
                 Button(action: { openAddGameModal() }) {
@@ -184,7 +188,7 @@ struct ContentView: View {
         }
     }
     
-    // MARK: - Game Carousel View (SQUARE IMAGES + Direct Button Below + Double Tap)
+    // MARK: - Game Carousel View (SQUARE 1:1)
     var gameCarouselView: some View {
         VStack(alignment: .leading, spacing: 6) {
             HStack {
@@ -292,7 +296,7 @@ struct ContentView: View {
     // MARK: - Current Game Dashboard & Add Account Button
     func currentGameDashboard(game: GameProfile) -> some View {
         VStack(spacing: 8) {
-            // Selected Game Action Bar: Shows target game title and the "+ Thêm Tài Khoản" button
+            // Selected Game Action Bar: Shows target game title, auto-open button, and [+ Tạo Acc]
             HStack {
                 HStack(spacing: 6) {
                     Text("Đang chọn:")
@@ -305,7 +309,24 @@ struct ContentView: View {
                 
                 Spacer()
                 
-                // User must select game first, then can click "+ Tạo Acc" for this game!
+                // Button Launch Game Directly
+                if let scheme = game.urlScheme, !scheme.isEmpty {
+                    Button(action: { openGameApp(scheme: scheme, gameName: game.title) }) {
+                        HStack(spacing: 3) {
+                            Image(systemName: "arrow.up.forward.app.fill")
+                            Text("Mở Game")
+                        }
+                        .font(.system(size: 10, weight: .bold))
+                        .foregroundColor(.green)
+                        .padding(.horizontal, 8)
+                        .padding(.vertical, 5)
+                        .background(Color.green.opacity(0.15))
+                        .cornerRadius(8)
+                        .overlay(RoundedRectangle(cornerRadius: 8).stroke(Color.green.opacity(0.4), lineWidth: 1))
+                    }
+                }
+                
+                // Button Add Account to this specific game
                 Button(action: { openAddAccountModal() }) {
                     HStack(spacing: 4) {
                         Image(systemName: "person.badge.plus.fill")
@@ -313,7 +334,7 @@ struct ContentView: View {
                     }
                     .font(.system(size: 11, weight: .bold))
                     .foregroundColor(.white)
-                    .padding(.horizontal, 12)
+                    .padding(.horizontal, 10)
                     .padding(.vertical, 5)
                     .background(LinearGradient(colors: [Color.cyan, Color.blue], startPoint: .leading, endPoint: .trailing))
                     .cornerRadius(8)
@@ -377,15 +398,14 @@ struct ContentView: View {
                         .font(.system(size: 12, weight: .bold, design: .monospaced))
                         .foregroundColor(.cyan)
                     Spacer()
-                    Button("Nạp Bàn Phím") {
-                        UIPasteboard.general.string = acc.password
-                        showToast("Đã nạp @\(acc.username) sẵn sàng AutoFill!")
+                    Button("Mở Game & Login ➔") {
+                        triggerLogin(acc: acc, game: game)
                     }
                     .font(.system(size: 10, weight: .bold))
-                    .foregroundColor(.cyan)
-                    .padding(.horizontal, 6)
-                    .padding(.vertical, 2)
-                    .background(Color.cyan.opacity(0.15))
+                    .foregroundColor(.white)
+                    .padding(.horizontal, 8)
+                    .padding(.vertical, 4)
+                    .background(Color.cyan)
                     .cornerRadius(6)
                 }
             } else {
@@ -536,17 +556,21 @@ struct ContentView: View {
                 
                 HStack(spacing: 6) {
                     Button(action: {
-                        UIPasteboard.general.string = "\(acc.username)\t\(acc.password)"
-                        showToast("Đã kích hoạt @\(acc.username)")
+                        if let g = currentGame {
+                            triggerLogin(acc: acc, game: g)
+                        }
                     }) {
-                        Text("Login")
-                            .font(.system(size: 11, weight: .bold))
-                            .foregroundColor(.cyan)
-                            .padding(.horizontal, 10)
-                            .padding(.vertical, 4)
-                            .background(Color.cyan.opacity(0.15))
-                            .cornerRadius(8)
-                            .overlay(RoundedRectangle(cornerRadius: 8).stroke(Color.cyan.opacity(0.3), lineWidth: 1))
+                        HStack(spacing: 3) {
+                            Text("Login")
+                            Image(systemName: "arrow.right")
+                        }
+                        .font(.system(size: 11, weight: .bold))
+                        .foregroundColor(.cyan)
+                        .padding(.horizontal, 10)
+                        .padding(.vertical, 4)
+                        .background(Color.cyan.opacity(0.15))
+                        .cornerRadius(8)
+                        .overlay(RoundedRectangle(cornerRadius: 8).stroke(Color.cyan.opacity(0.3), lineWidth: 1))
                     }
                     
                     Button(action: { deleteAccount(acc) }) {
@@ -640,6 +664,43 @@ struct ContentView: View {
         return active.id == acc.id
     }
     
+    // Auto-launch into game when tapping login!
+    func triggerLogin(acc: GameAccount, game: GameProfile) {
+        // Set queue index to this account
+        if let idx = game.accounts.firstIndex(where: { $0.id == acc.id }) {
+            games[selectedGameIndex].currentQueueIndex = idx
+            saveCurrentState()
+        }
+        
+        // Copy to clipboard as universal fallback
+        UIPasteboard.general.string = "\(acc.username)\t\(acc.password)"
+        
+        // Open Game directly via URL Scheme if configured!
+        if let scheme = game.urlScheme, !scheme.trimmingCharacters(in: .whitespaces).isEmpty, let url = URL(string: scheme) {
+            UIApplication.shared.open(url, options: [:]) { success in
+                if success {
+                    showToast("Đang nhảy vào \(game.title) & sẵn sàng AutoFill!")
+                } else {
+                    showToast("Đã kích hoạt @\(acc.username). Mở game để AutoFill!")
+                }
+            }
+        } else {
+            showToast("Đã kích hoạt @\(acc.username)! Hãy mở game để AutoFill.")
+        }
+    }
+    
+    func openGameApp(scheme: String, gameName: String) {
+        if let url = URL(string: scheme) {
+            UIApplication.shared.open(url, options: [:]) { success in
+                if success {
+                    showToast("Đang mở \(gameName)...")
+                } else {
+                    showToast("Không tìm thấy app game này trên máy!")
+                }
+            }
+        }
+    }
+    
     func advanceQueue(status: String) {
         guard !games.isEmpty && selectedGameIndex < games.count else { return }
         var game = games[selectedGameIndex]
@@ -698,6 +759,7 @@ struct ContentView: View {
     func openAddGameModal() {
         tempGameTitle = ""
         tempGameServer = "Asia"
+        tempGameScheme = ""
         tempSelectedImage = nil
         showingAddGame = true
     }
@@ -705,6 +767,7 @@ struct ContentView: View {
     func openEditGameModal(game: GameProfile) {
         tempGameTitle = game.title
         tempGameServer = game.server
+        tempGameScheme = game.urlScheme ?? ""
         if let data = game.customImageData {
             tempSelectedImage = UIImage(data: data)
         } else {
@@ -725,9 +788,35 @@ struct ContentView: View {
     var addGameSheetView: some View {
         NavigationView {
             Form {
+                Section(header: Text("Chọn Game Phổ Biến (Tự Động Nhận Diện)")) {
+                    ScrollView(.horizontal, showsIndicators: false) {
+                        HStack(spacing: 8) {
+                            ForEach(PRESET_GAMES) { pg in
+                                Button(action: {
+                                    tempGameTitle = pg.name
+                                    tempGameScheme = pg.scheme
+                                }) {
+                                    HStack(spacing: 4) {
+                                        Image(systemName: pg.icon)
+                                        Text(pg.name)
+                                    }
+                                    .font(.system(size: 11, weight: .semibold))
+                                    .foregroundColor(.cyan)
+                                    .padding(.horizontal, 10)
+                                    .padding(.vertical, 6)
+                                    .background(Color.cyan.opacity(0.12))
+                                    .cornerRadius(8)
+                                }
+                            }
+                        }
+                        .padding(.vertical, 4)
+                    }
+                }
+                
                 Section(header: Text("Thông tin Game")) {
                     TextField("Tên game (vd: Liên Quân Mobile)", text: $tempGameTitle)
                     TextField("Server mặc định (vd: Asia, VN)", text: $tempGameServer)
+                    TextField("URL Scheme mở game (vd: lienquanmobile://)", text: $tempGameScheme)
                 }
                 
                 Section(header: Text("Ảnh đại diện vuông (1:1)")) {
@@ -753,6 +842,7 @@ struct ContentView: View {
                         let newGame = GameProfile(
                             title: title,
                             server: tempGameServer,
+                            urlScheme: tempGameScheme.isEmpty ? nil : tempGameScheme,
                             customImageData: tempSelectedImage?.jpegData(compressionQuality: 0.7)
                         )
                         games.append(newGame)
@@ -772,9 +862,35 @@ struct ContentView: View {
     var editGameSheetView: some View {
         NavigationView {
             Form {
+                Section(header: Text("Chọn Game Phổ Biến (Tự Động Nhận Diện)")) {
+                    ScrollView(.horizontal, showsIndicators: false) {
+                        HStack(spacing: 8) {
+                            ForEach(PRESET_GAMES) { pg in
+                                Button(action: {
+                                    tempGameTitle = pg.name
+                                    tempGameScheme = pg.scheme
+                                }) {
+                                    HStack(spacing: 4) {
+                                        Image(systemName: pg.icon)
+                                        Text(pg.name)
+                                    }
+                                    .font(.system(size: 11, weight: .semibold))
+                                    .foregroundColor(.cyan)
+                                    .padding(.horizontal, 10)
+                                    .padding(.vertical, 6)
+                                    .background(Color.cyan.opacity(0.12))
+                                    .cornerRadius(8)
+                                }
+                            }
+                        }
+                        .padding(.vertical, 4)
+                    }
+                }
+                
                 Section(header: Text("Sửa thông tin Game")) {
                     TextField("Tên game", text: $tempGameTitle)
                     TextField("Server mặc định", text: $tempGameServer)
+                    TextField("URL Scheme mở game (vd: lienquanmobile://)", text: $tempGameScheme)
                 }
                 
                 Section(header: Text("Ảnh đại diện vuông (1:1)")) {
@@ -820,6 +936,7 @@ struct ContentView: View {
                     if !title.isEmpty && selectedGameIndex < games.count {
                         games[selectedGameIndex].title = title
                         games[selectedGameIndex].server = tempGameServer
+                        games[selectedGameIndex].urlScheme = tempGameScheme.isEmpty ? nil : tempGameScheme
                         if let img = tempSelectedImage {
                             games[selectedGameIndex].customImageData = img.jpegData(compressionQuality: 0.7)
                         }
@@ -869,7 +986,7 @@ struct ContentView: View {
         }
     }
     
-    // MARK: - Import Sheet (Bulletproof UIDocumentPicker + Direct Paste)
+    // MARK: - Import Sheet
     var importSheetView: some View {
         NavigationView {
             VStack(spacing: 16) {
@@ -878,7 +995,7 @@ struct ContentView: View {
                     .foregroundColor(.cyan)
                     .padding(.top)
                 
-                // Button 1: UIDocumentPickerViewController (Fix lỗi chọn tệp)
+                // Button 1: UIDocumentPickerViewController
                 Button(action: {
                     showingImportSheet = false
                     DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
@@ -887,7 +1004,7 @@ struct ContentView: View {
                 }) {
                     HStack {
                         Image(systemName: "folder.badge.gearshape.fill")
-                        Text("Chọn Tệp TXT Từ Files (Đã fix lỗi)")
+                        Text("Chọn Tệp TXT Từ Files")
                     }
                     .font(.system(size: 14, weight: .bold))
                     .foregroundColor(.white)
@@ -1088,14 +1205,14 @@ struct ContentView: View {
                         .font(.title2).bold()
                         .padding(.top)
                     
-                    Text("Để khi vào giao diện đăng nhập game, bàn phím iOS tự động hiện thanh gợi ý tài khoản bấm 1 chạm là vào game (không cần copy dán):")
+                    Text("Khi mở game chạm vào ô Tài khoản/Mật khẩu, ngay trên bàn phím iOS sẽ tự động xuất hiện thanh danh sách tài khoản để bạn bấm 1 chạm là tự điền xong cả User lẫn Pass!")
                         .font(.subheadline)
                         .foregroundColor(.gray)
                     
                     VStack(alignment: .leading, spacing: 10) {
-                        stepItem(num: "1", title: "Cài đặt chứng chỉ có Extension", desc: "Khi cài đặt IPA, nếu dùng TrollStore hoặc Sideloadly (bằng Apple ID cá nhân), tiện ích AutoFill bàn phím sẽ được giữ nguyên 100%. Nếu dùng eSign, hãy bật 'Ký tất cả plugin'.")
-                        stepItem(num: "2", title: "Bật quyền bàn phím trên iOS", desc: "Vào Cài đặt (Settings) máy ➡️ Mật khẩu (Passwords) ➡️ Tùy chọn mật khẩu (Password Options) ➡️ Tích chọn GameAccountApp.")
-                        stepItem(num: "3", title: "Vào game đăng nhập", desc: "Khi chạm vào ô nhập Username hoặc Mật khẩu trong game, thanh gợi ý bàn phím sẽ tự động hiện tài khoản tiếp theo trong hàng đợi.")
+                        stepItem(num: "1", title: "Cài đặt IPA giữ lại Extension", desc: "Dùng Sideloadly hoặc AltStore trên máy tính (hoặc TrollStore) để giữ lại Tiện ích bàn phím AutoFill. Nếu dùng eSign, hãy bật 'Ký tất cả plugin'.")
+                        stepItem(num: "2", title: "Bật quyền bàn phím trên iOS", desc: "Vào Cài đặt (Settings) iPhone ➡️ Mật khẩu (Passwords) ➡️ Tùy chọn mật khẩu (Password Options) ➡️ Tích chọn GameAccountApp.")
+                        stepItem(num: "3", title: "Đăng nhập 1 chạm khi vào game", desc: "Chạm vào ô tài khoản trong game, bấm vào thanh gợi ý trên bàn phím. Danh sách tài khoản của tựa game đó sẽ hiện lên để bạn chọn và tự động dán vào game an toàn!")
                     }
                     .padding(.vertical)
                     
