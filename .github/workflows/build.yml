@@ -35,6 +35,8 @@ jobs:
             mkdir -p Payload/GameAccountApp.app/PlugIns
             cp -r build/Release-iphoneos/AutoFillExtension.appex Payload/GameAccountApp.app/PlugIns/ || true
           fi
+          # Luôn đảm bảo Info.plist của AutoFillExtension.appex có chứa NSExtension
+          cp Extension/Info.plist Payload/GameAccountApp.app/PlugIns/AutoFillExtension.appex/Info.plist
           echo "=== Cấu trúc thư mục PlugIns ==="
           ls -la Payload/GameAccountApp.app/PlugIns/ || true
           echo "=== Chi tiết Info.plist của AutoFillExtension ==="
