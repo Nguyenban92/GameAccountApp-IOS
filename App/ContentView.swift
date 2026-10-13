@@ -13,6 +13,8 @@ struct ContentView: View {
     @State private var showingExportSheet = false
     @State private var showingLogsSheet = false
     @State private var showingImagePicker = false
+    @State private var showingDocumentPicker = false
+    @State private var showingAutoFillGuide = false
     
     // Temporary variables for Game Creation / Edit
     @State private var tempGameTitle = ""
@@ -32,7 +34,6 @@ struct ContentView: View {
     @State private var exportModeRemoveFailed = true
     @State private var shareItems: [Any] = []
     @State private var showingShareSheet = false
-    @State private var showingFileImporter = false
     
     // Toast notification
     @State private var toastMessage: String? = nil
@@ -63,13 +64,13 @@ struct ContentView: View {
             Color(red: 0.04, green: 0.05, blue: 0.08).edgesIgnoringSafeArea(.all)
             
             VStack(spacing: 0) {
-                // Top Header Bar
+                // Top Header Bar (Only App title & + Game button)
                 topHeaderView
                     .padding(.horizontal)
                     .padding(.top, 8)
                     .padding(.bottom, 6)
                 
-                // Horizontal Game Carousel (Multi-Game Management)
+                // Horizontal Game Carousel (Square Cover Art + Button Sửa Ảnh/Tên right below)
                 gameCarouselView
                     .padding(.bottom, 8)
                 
@@ -118,9 +119,18 @@ struct ContentView: View {
         .sheet(isPresented: $showingExportSheet) { exportSheetView }
         .sheet(isPresented: $showingLogsSheet) { logsSheetView }
         .sheet(isPresented: $showingShareSheet) { ShareSheet(items: shareItems) }
-        .fileImporter(isPresented: $showingFileImporter, allowedContentTypes: [.plainText]) { result in
-            handleFileImport(result: result)
+        .sheet(isPresented: $showingDocumentPicker) {
+            DocumentPicker(
+                onPick: { content in
+                    importPasteText = content
+                    parseAndImportPasteText()
+                },
+                onError: { errMsg in
+                    showToast(errMsg)
+                }
+            )
         }
+        .sheet(isPresented: $showingAutoFillGuide) { autoFillGuideSheetView }
     }
     
     // MARK: - Top Header View
@@ -147,10 +157,20 @@ struct ContentView: View {
             Spacer()
             
             HStack(spacing: 8) {
+                Button(action: { showingAutoFillGuide = true }) {
+                    Image(systemName: "key.fill")
+                        .font(.system(size: 12))
+                        .foregroundColor(.yellow)
+                        .padding(7)
+                        .background(Color(red: 0.1, green: 0.1, blue: 0.15))
+                        .cornerRadius(10)
+                        .overlay(RoundedRectangle(cornerRadius: 10).stroke(Color.yellow.opacity(0.3), lineWidth: 1))
+                }
+                
                 Button(action: { openAddGameModal() }) {
                     HStack(spacing: 4) {
                         Image(systemName: "plus")
-                        Text("Game")
+                        Text("Game Mới")
                     }
                     .font(.system(size: 12, weight: .semibold))
                     .foregroundColor(.cyan)
@@ -160,41 +180,19 @@ struct ContentView: View {
                     .cornerRadius(10)
                     .overlay(RoundedRectangle(cornerRadius: 10).stroke(Color.cyan.opacity(0.3), lineWidth: 1))
                 }
-                
-                Button(action: { openAddAccountModal() }) {
-                    HStack(spacing: 4) {
-                        Image(systemName: "person.badge.plus")
-                        Text("Acc")
-                    }
-                    .font(.system(size: 12, weight: .bold))
-                    .foregroundColor(.white)
-                    .padding(.horizontal, 12)
-                    .padding(.vertical, 6)
-                    .background(LinearGradient(colors: [Color.cyan, Color.blue], startPoint: .leading, endPoint: .trailing))
-                    .cornerRadius(10)
-                    .shadow(color: Color.blue.opacity(0.4), radius: 5, x: 0, y: 2)
-                }
             }
         }
     }
     
-    // MARK: - Game Carousel View
+    // MARK: - Game Carousel View (SQUARE IMAGES + Direct Button Below + Double Tap)
     var gameCarouselView: some View {
         VStack(alignment: .leading, spacing: 6) {
             HStack {
-                Text("TỰA GAME QUẢN LÝ")
+                Text("DANH SÁCH GAME (Nhấp 2 lần để sửa)")
                     .font(.system(size: 10, weight: .bold, design: .rounded))
                     .foregroundColor(.gray)
                     .padding(.horizontal)
                 Spacer()
-                if let game = currentGame {
-                    Button(action: { openEditGameModal(game: game) }) {
-                        Text("Sửa ảnh / Tên ✎")
-                            .font(.system(size: 11, weight: .medium))
-                            .foregroundColor(.cyan)
-                            .padding(.horizontal)
-                    }
-                }
             }
             
             ScrollView(.horizontal, showsIndicators: false) {
@@ -203,69 +201,87 @@ struct ContentView: View {
                         let g = games[idx]
                         let isSelected = idx == selectedGameIndex
                         
-                        Button(action: {
-                            selectedGameIndex = idx
-                            SharedDataManager.shared.saveActiveGameId(g.id)
-                        }) {
-                            VStack(alignment: .leading, spacing: 4) {
-                                ZStack(alignment: .bottomTrailing) {
-                                    if let data = g.customImageData, let uiImg = UIImage(data: data) {
-                                        Image(uiImage: uiImg)
-                                            .resizable()
-                                            .scaledToFill()
-                                            .frame(width: 120, height: 60)
-                                            .clipped()
-                                    } else {
-                                        LinearGradient(colors: [Color.indigo.opacity(0.8), Color.cyan.opacity(0.7)], startPoint: .topLeading, endPoint: .bottomTrailing)
-                                            .frame(width: 120, height: 60)
-                                            .overlay(Image(systemName: g.icon).font(.title2).foregroundColor(.white.opacity(0.8)))
-                                    }
-                                    
-                                    Text("\(g.totalAccounts) Acc")
-                                        .font(.system(size: 9, weight: .bold, design: .monospaced))
-                                        .foregroundColor(.white)
-                                        .padding(.horizontal, 5)
-                                        .padding(.vertical, 2)
-                                        .background(Color.black.opacity(0.7))
-                                        .cornerRadius(4)
-                                        .padding(4)
+                        VStack(spacing: 5) {
+                            // Square Game Cover Tile
+                            ZStack(alignment: .bottomTrailing) {
+                                if let data = g.customImageData, let uiImg = UIImage(data: data) {
+                                    Image(uiImage: uiImg)
+                                        .resizable()
+                                        .scaledToFill()
+                                        .frame(width: 80, height: 80)
+                                        .clipped()
+                                } else {
+                                    LinearGradient(colors: [Color.indigo.opacity(0.8), Color.cyan.opacity(0.7)], startPoint: .topLeading, endPoint: .bottomTrailing)
+                                        .frame(width: 80, height: 80)
+                                        .overlay(Image(systemName: g.icon).font(.title).foregroundColor(.white.opacity(0.8)))
                                 }
-                                .cornerRadius(10)
                                 
-                                Text(g.title)
-                                    .font(.system(size: 12, weight: .bold))
-                                    .foregroundColor(isSelected ? .cyan : .white)
-                                    .lineLimit(1)
-                                
-                                Text("Server: \(g.server)")
-                                    .font(.system(size: 9, weight: .regular))
-                                    .foregroundColor(.gray)
+                                Text("\(g.totalAccounts)")
+                                    .font(.system(size: 9, weight: .bold, design: .monospaced))
+                                    .foregroundColor(.white)
+                                    .padding(.horizontal, 5)
+                                    .padding(.vertical, 2)
+                                    .background(Color.black.opacity(0.75))
+                                    .cornerRadius(4)
+                                    .padding(4)
                             }
-                            .padding(8)
-                            .background(Color(red: 0.07, green: 0.09, blue: 0.15))
-                            .cornerRadius(14)
+                            .cornerRadius(16)
                             .overlay(
-                                RoundedRectangle(cornerRadius: 14)
-                                    .stroke(isSelected ? Color.cyan : Color.white.opacity(0.08), lineWidth: isSelected ? 1.5 : 1)
+                                RoundedRectangle(cornerRadius: 16)
+                                    .stroke(isSelected ? Color.cyan : Color.white.opacity(0.12), lineWidth: isSelected ? 2 : 1)
                             )
-                            .shadow(color: isSelected ? Color.cyan.opacity(0.3) : Color.clear, radius: 8, x: 0, y: 2)
+                            .shadow(color: isSelected ? Color.cyan.opacity(0.4) : Color.clear, radius: 8, x: 0, y: 2)
+                            // 1 tap to select, double tap to open edit
+                            .onTapGesture(count: 2) {
+                                selectedGameIndex = idx
+                                openEditGameModal(game: g)
+                            }
+                            .onTapGesture(count: 1) {
+                                selectedGameIndex = idx
+                                SharedDataManager.shared.saveActiveGameId(g.id)
+                            }
+                            
+                            // Game Title
+                            Text(g.title)
+                                .font(.system(size: 11, weight: .bold))
+                                .foregroundColor(isSelected ? .cyan : .white)
+                                .lineLimit(1)
+                                .frame(width: 84)
+                            
+                            // Button "Sửa Ảnh / Tên" directly below the square image
+                            Button(action: {
+                                selectedGameIndex = idx
+                                openEditGameModal(game: g)
+                            }) {
+                                Text("Sửa ✎")
+                                    .font(.system(size: 9, weight: .semibold))
+                                    .foregroundColor(.cyan)
+                                    .padding(.horizontal, 8)
+                                    .padding(.vertical, 2)
+                                    .background(Color.cyan.opacity(0.15))
+                                    .cornerRadius(6)
+                                    .overlay(RoundedRectangle(cornerRadius: 6).stroke(Color.cyan.opacity(0.3), lineWidth: 0.8))
+                            }
                         }
                     }
                     
                     // Add Game Tile
                     Button(action: { openAddGameModal() }) {
-                        VStack(spacing: 4) {
-                            Image(systemName: "plus.circle.fill")
-                                .font(.title3)
-                                .foregroundColor(.cyan)
+                        VStack(spacing: 6) {
+                            ZStack {
+                                RoundedRectangle(cornerRadius: 16)
+                                    .stroke(style: StrokeStyle(lineWidth: 1.5, dash: [4]))
+                                    .foregroundColor(Color.cyan.opacity(0.5))
+                                    .frame(width: 80, height: 80)
+                                
+                                Image(systemName: "plus")
+                                    .font(.title2)
+                                    .foregroundColor(.cyan)
+                            }
                             Text("Thêm Game")
                                 .font(.system(size: 10, weight: .semibold))
                                 .foregroundColor(.gray)
                         }
-                        .frame(width: 80, height: 95)
-                        .background(Color(red: 0.06, green: 0.08, blue: 0.13))
-                        .cornerRadius(14)
-                        .overlay(RoundedRectangle(cornerRadius: 14).stroke(style: StrokeStyle(lineWidth: 1, dash: [4])).foregroundColor(Color.cyan.opacity(0.4)))
                     }
                 }
                 .padding(.horizontal)
@@ -273,9 +289,39 @@ struct ContentView: View {
         }
     }
     
-    // MARK: - Current Game Dashboard & Auto-Runner Pill
+    // MARK: - Current Game Dashboard & Add Account Button
     func currentGameDashboard(game: GameProfile) -> some View {
         VStack(spacing: 8) {
+            // Selected Game Action Bar: Shows target game title and the "+ Thêm Tài Khoản" button
+            HStack {
+                HStack(spacing: 6) {
+                    Text("Đang chọn:")
+                        .font(.system(size: 11))
+                        .foregroundColor(.gray)
+                    Text(game.title)
+                        .font(.system(size: 13, weight: .bold))
+                        .foregroundColor(.cyan)
+                }
+                
+                Spacer()
+                
+                // User must select game first, then can click "+ Tạo Acc" for this game!
+                Button(action: { openAddAccountModal() }) {
+                    HStack(spacing: 4) {
+                        Image(systemName: "person.badge.plus.fill")
+                        Text("+ Tạo Acc")
+                    }
+                    .font(.system(size: 11, weight: .bold))
+                    .foregroundColor(.white)
+                    .padding(.horizontal, 12)
+                    .padding(.vertical, 5)
+                    .background(LinearGradient(colors: [Color.cyan, Color.blue], startPoint: .leading, endPoint: .trailing))
+                    .cornerRadius(8)
+                    .shadow(color: Color.blue.opacity(0.4), radius: 4, x: 0, y: 1)
+                }
+            }
+            .padding(.horizontal, 4)
+            
             // Stats summary row
             HStack(spacing: 8) {
                 statBox(title: "Tổng số", value: "\(game.totalAccounts)", color: .cyan)
@@ -312,7 +358,7 @@ struct ContentView: View {
             HStack {
                 HStack(spacing: 6) {
                     Circle().fill(Color.green).frame(width: 6, height: 6)
-                    Text("AUTO RUNNER")
+                    Text("HÀNG ĐỢI AUTO-LOGIN")
                         .font(.system(size: 10, weight: .bold, design: .rounded))
                         .foregroundColor(.green)
                 }
@@ -324,16 +370,16 @@ struct ContentView: View {
             
             if let acc = runningAccount {
                 HStack {
-                    Text("Đang chạy: ")
+                    Text("Kế tiếp: ")
                         .font(.system(size: 11))
                         .foregroundColor(.gray)
                     Text(acc.username)
                         .font(.system(size: 12, weight: .bold, design: .monospaced))
                         .foregroundColor(.cyan)
                     Spacer()
-                    Button("Copy MK") {
+                    Button("Nạp Bàn Phím") {
                         UIPasteboard.general.string = acc.password
-                        showToast("Đã copy mật khẩu của @\(acc.username)")
+                        showToast("Đã nạp @\(acc.username) sẵn sàng AutoFill!")
                     }
                     .font(.system(size: 10, weight: .bold))
                     .foregroundColor(.cyan)
@@ -404,12 +450,16 @@ struct ContentView: View {
             .cornerRadius(10)
             
             Button(action: { showingImportSheet = true }) {
-                Image(systemName: "square.and.arrow.down")
-                    .font(.system(size: 13, weight: .semibold))
-                    .foregroundColor(.cyan)
-                    .padding(8)
-                    .background(Color(red: 0.08, green: 0.11, blue: 0.18))
-                    .cornerRadius(10)
+                HStack(spacing: 3) {
+                    Image(systemName: "square.and.arrow.down")
+                    Text("Nhập TXT")
+                }
+                .font(.system(size: 11, weight: .semibold))
+                .foregroundColor(.cyan)
+                .padding(.horizontal, 8)
+                .padding(.vertical, 7)
+                .background(Color(red: 0.08, green: 0.11, blue: 0.18))
+                .cornerRadius(10)
             }
             
             Button(action: { showingExportSheet = true }) {
@@ -445,8 +495,8 @@ struct ContentView: View {
                         Text("Chưa có tài khoản nào trong game này")
                             .font(.system(size: 13, weight: .medium))
                             .foregroundColor(.gray)
-                        Button("Thêm tài khoản hoặc Dán TXT") {
-                            showingImportSheet = true
+                        Button("Nhấn vào đây để thêm tài khoản") {
+                            openAddAccountModal()
                         }
                         .font(.system(size: 12, weight: .bold))
                         .foregroundColor(.cyan)
@@ -487,7 +537,7 @@ struct ContentView: View {
                 HStack(spacing: 6) {
                     Button(action: {
                         UIPasteboard.general.string = "\(acc.username)\t\(acc.password)"
-                        showToast("Đã copy acc & pass của @\(acc.username)")
+                        showToast("Đã kích hoạt @\(acc.username)")
                     }) {
                         Text("Login")
                             .font(.system(size: 11, weight: .bold))
@@ -680,13 +730,14 @@ struct ContentView: View {
                     TextField("Server mặc định (vd: Asia, VN)", text: $tempGameServer)
                 }
                 
-                Section(header: Text("Ảnh đại diện nhận diện")) {
+                Section(header: Text("Ảnh đại diện vuông (1:1)")) {
                     if let img = tempSelectedImage {
                         Image(uiImage: img)
                             .resizable()
-                            .scaledToFit()
-                            .frame(height: 120)
-                            .cornerRadius(8)
+                            .scaledToFill()
+                            .frame(width: 100, height: 100)
+                            .cornerRadius(16)
+                            .clipped()
                     }
                     Button("Chọn ảnh từ thư viện máy") {
                         showingImagePicker = true
@@ -726,16 +777,24 @@ struct ContentView: View {
                     TextField("Server mặc định", text: $tempGameServer)
                 }
                 
-                Section(header: Text("Ảnh đại diện nhận diện")) {
+                Section(header: Text("Ảnh đại diện vuông (1:1)")) {
                     if let img = tempSelectedImage {
                         Image(uiImage: img)
                             .resizable()
-                            .scaledToFit()
-                            .frame(height: 120)
-                            .cornerRadius(8)
+                            .scaledToFill()
+                            .frame(width: 100, height: 100)
+                            .cornerRadius(16)
+                            .clipped()
                     }
                     Button("Đổi ảnh từ thư viện máy") {
                         showingImagePicker = true
+                    }
+                }
+                
+                Section {
+                    Button("Thêm Tài Khoản Vào Game Này") {
+                        showingEditGame = false
+                        openAddAccountModal()
                     }
                 }
                 
@@ -780,14 +839,14 @@ struct ContentView: View {
     var addAccountSheetView: some View {
         NavigationView {
             Form {
-                Section(header: Text("Tài khoản cho: \(currentGame?.title ?? "")")) {
+                Section(header: Text("Tạo tài khoản cho: \(currentGame?.title ?? "")")) {
                     TextField("Username / Tài khoản", text: $tempAccUser)
                     SecureField("Mật khẩu", text: $tempAccPass)
                     TextField("Server", text: $tempAccServer)
                     TextField("Level / Rank / Ghi chú", text: $tempAccRank)
                 }
             }
-            .navigationTitle("Thêm Tài Khoản")
+            .navigationTitle("Tạo Tài Khoản")
             .navigationBarItems(
                 leading: Button("Hủy") { showingAddAccount = false },
                 trailing: Button("Lưu") {
@@ -810,7 +869,7 @@ struct ContentView: View {
         }
     }
     
-    // MARK: - Import Sheet (Paste Direct + File)
+    // MARK: - Import Sheet (Bulletproof UIDocumentPicker + Direct Paste)
     var importSheetView: some View {
         NavigationView {
             VStack(spacing: 16) {
@@ -819,17 +878,40 @@ struct ContentView: View {
                     .foregroundColor(.cyan)
                     .padding(.top)
                 
+                // Button 1: UIDocumentPickerViewController (Fix lỗi chọn tệp)
+                Button(action: {
+                    showingImportSheet = false
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+                        showingDocumentPicker = true
+                    }
+                }) {
+                    HStack {
+                        Image(systemName: "folder.badge.gearshape.fill")
+                        Text("Chọn Tệp TXT Từ Files (Đã fix lỗi)")
+                    }
+                    .font(.system(size: 14, weight: .bold))
+                    .foregroundColor(.white)
+                    .frame(maxWidth: .infinity)
+                    .padding()
+                    .background(LinearGradient(colors: [Color.cyan, Color.blue], startPoint: .leading, endPoint: .trailing))
+                    .cornerRadius(12)
+                }
+                .padding(.horizontal)
+                
+                HStack {
+                    Rectangle().frame(height: 1).foregroundColor(.gray.opacity(0.3))
+                    Text("HOẶC DÁN TRỰC TIẾP").font(.caption).foregroundColor(.gray)
+                    Rectangle().frame(height: 1).foregroundColor(.gray.opacity(0.3))
+                }
+                .padding(.horizontal)
+                
                 VStack(alignment: .leading, spacing: 6) {
-                    Text("Dán danh sách tài khoản trực tiếp:")
-                        .font(.caption)
-                        .foregroundColor(.gray)
-                    
                     TextEditor(text: $importPasteText)
                         .font(.system(size: 12, design: .monospaced))
                         .padding(8)
                         .background(Color(UIColor.secondarySystemBackground))
                         .cornerRadius(8)
-                        .frame(height: 160)
+                        .frame(height: 150)
                     
                     Text("Hỗ trợ định dạng mỗi dòng: user,pass hoặc user|pass")
                         .font(.system(size: 10))
@@ -839,30 +921,12 @@ struct ContentView: View {
                 
                 Button(action: { parseAndImportPasteText() }) {
                     Text("Nhận Diện & Nạp Vào Game")
-                        .font(.system(size: 14, weight: .bold))
+                        .font(.system(size: 13, weight: .semibold))
                         .foregroundColor(.white)
                         .frame(maxWidth: .infinity)
-                        .padding()
-                        .background(Color.blue)
-                        .cornerRadius(12)
-                }
-                .padding(.horizontal)
-                
-                HStack {
-                    Rectangle().frame(height: 1).foregroundColor(.gray.opacity(0.3))
-                    Text("HOẶC").font(.caption).foregroundColor(.gray)
-                    Rectangle().frame(height: 1).foregroundColor(.gray.opacity(0.3))
-                }
-                .padding(.horizontal)
-                
-                Button(action: { showingFileImporter = true }) {
-                    Label("Chọn Tệp TXT Từ Files", systemImage: "doc.text")
-                        .font(.system(size: 13, weight: .semibold))
-                        .foregroundColor(.cyan)
-                        .frame(maxWidth: .infinity)
-                        .padding()
-                        .background(Color(UIColor.secondarySystemBackground))
-                        .cornerRadius(12)
+                        .padding(12)
+                        .background(Color.green)
+                        .cornerRadius(10)
                 }
                 .padding(.horizontal)
                 
@@ -910,20 +974,6 @@ struct ContentView: View {
         importPasteText = ""
         showingImportSheet = false
         showToast("Đã nạp thành công \(count) tài khoản!")
-    }
-    
-    func handleFileImport(result: Result<URL, Error>) {
-        do {
-            let url = try result.get()
-            if url.startAccessingSecurityScopedResource() {
-                defer { url.stopAccessingSecurityScopedResource() }
-                let text = try String(contentsOf: url, encoding: .utf8)
-                importPasteText = text
-                parseAndImportPasteText()
-            }
-        } catch {
-            showToast("Lỗi đọc file: \(error.localizedDescription)")
-        }
     }
     
     // MARK: - Export Sheet
@@ -1026,6 +1076,50 @@ struct ContentView: View {
                 },
                 trailing: Button("Đóng") { showingLogsSheet = false }
             )
+        }
+    }
+    
+    // MARK: - AutoFill Native Guide Sheet
+    var autoFillGuideSheetView: some View {
+        NavigationView {
+            ScrollView {
+                VStack(alignment: .leading, spacing: 14) {
+                    Text("Cách Bật AutoFill Tự Động Trong Game")
+                        .font(.title2).bold()
+                        .padding(.top)
+                    
+                    Text("Để khi vào giao diện đăng nhập game, bàn phím iOS tự động hiện thanh gợi ý tài khoản bấm 1 chạm là vào game (không cần copy dán):")
+                        .font(.subheadline)
+                        .foregroundColor(.gray)
+                    
+                    VStack(alignment: .leading, spacing: 10) {
+                        stepItem(num: "1", title: "Cài đặt chứng chỉ có Extension", desc: "Khi cài đặt IPA, nếu dùng TrollStore hoặc Sideloadly (bằng Apple ID cá nhân), tiện ích AutoFill bàn phím sẽ được giữ nguyên 100%. Nếu dùng eSign, hãy bật 'Ký tất cả plugin'.")
+                        stepItem(num: "2", title: "Bật quyền bàn phím trên iOS", desc: "Vào Cài đặt (Settings) máy ➡️ Mật khẩu (Passwords) ➡️ Tùy chọn mật khẩu (Password Options) ➡️ Tích chọn GameAccountApp.")
+                        stepItem(num: "3", title: "Vào game đăng nhập", desc: "Khi chạm vào ô nhập Username hoặc Mật khẩu trong game, thanh gợi ý bàn phím sẽ tự động hiện tài khoản tiếp theo trong hàng đợi.")
+                    }
+                    .padding(.vertical)
+                    
+                    Spacer()
+                }
+                .padding()
+            }
+            .navigationTitle("Hướng Dẫn AutoFill")
+            .navigationBarItems(trailing: Button("Đóng") { showingAutoFillGuide = false })
+        }
+    }
+    
+    func stepItem(num: String, title: String, desc: String) -> some View {
+        HStack(alignment: .top, spacing: 12) {
+            Text(num)
+                .font(.system(size: 14, weight: .bold))
+                .foregroundColor(.black)
+                .frame(width: 24, height: 24)
+                .background(Color.cyan)
+                .clipShape(Circle())
+            VStack(alignment: .leading, spacing: 2) {
+                Text(title).font(.system(size: 14, weight: .bold))
+                Text(desc).font(.caption).foregroundColor(.gray)
+            }
         }
     }
 }
