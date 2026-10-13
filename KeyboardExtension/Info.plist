@@ -5,17 +5,17 @@
 	<key>BuildMachineOSBuild</key>
 	<string>23F81a</string>
 	<key>CFBundleDevelopmentRegion</key>
-	<string>en</string>
+	<string>vi</string>
 	<key>CFBundleDisplayName</key>
-	<string>AutoFillExtension</string>
+	<string>Game Keyboard</string>
 	<key>CFBundleExecutable</key>
-	<string>AutoFillExtension</string>
+	<string>GameKeyboardExtension</string>
 	<key>CFBundleIdentifier</key>
-	<string>com.ban.GameAccountApp.AutoFillExtension</string>
+	<string>com.ban.GameAccountApp.GameKeyboardExtension</string>
 	<key>CFBundleInfoDictionaryVersion</key>
 	<string>6.0</string>
 	<key>CFBundleName</key>
-	<string>AutoFillExtension</string>
+	<string>GameKeyboardExtension</string>
 	<key>CFBundlePackageType</key>
 	<string>XPC!</string>
 	<key>CFBundleShortVersionString</key>
@@ -31,9 +31,20 @@
 	<key>NSExtension</key>
 	<dict>
 		<key>NSExtensionPointIdentifier</key>
-		<string>com.apple.authentication-services-credential-provider-ui</string>
+		<string>com.apple.keyboard-service</string>
 		<key>NSExtensionPrincipalClass</key>
-		<string>AutoFillExtension.CredentialProviderViewController</string>
+		<string>GameKeyboardExtension.KeyboardViewController</string>
+		<key>NSExtensionAttributes</key>
+		<dict>
+			<key>IsASCIICapable</key>
+			<false/>
+			<key>PrefersRightToLeft</key>
+			<false/>
+			<key>PrimaryLanguage</key>
+			<string>vi-VN</string>
+			<key>RequestsOpenAccess</key>
+			<true/>
+		</dict>
 	</dict>
 	<key>UIDeviceFamily</key>
 	<array>

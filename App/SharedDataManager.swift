@@ -173,3 +173,31 @@ public class SharedDataManager {
         return nil
     }
 }
+
+// MARK: - Keyboard Payload
+public struct KeyboardPayloadAccount: Codable {
+    public var username: String
+    public var password: String
+    public var server: String
+    
+    public init(username: String, password: String, server: String = "Asia") {
+        self.username = username
+        self.password = password
+        self.server = server
+    }
+}
+
+public struct KeyboardPayloadData: Codable {
+    public var gameTitle: String
+    public var currentUsername: String
+    public var currentPassword: String
+    public var accounts: [KeyboardPayloadAccount]
+    
+    public init(gameTitle: String, currentUsername: String, currentPassword: String, accounts: [KeyboardPayloadAccount]) {
+        self.gameTitle = gameTitle
+        self.currentUsername = currentUsername
+        self.currentPassword = currentPassword
+        self.accounts = accounts
+    }
+}
+

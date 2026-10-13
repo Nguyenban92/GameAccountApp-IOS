@@ -3,35 +3,63 @@ import UIKit
 public class AppLauncher {
     public static let shared = AppLauncher()
     
-    /// Tự động mở Game qua Bundle ID hoặc URL Scheme hoặc Apple Shortcuts
+    /// Tự động mở Game qua Bundle ID, danh sách URL Scheme hoặc Apple Shortcuts
     public func launchGame(scheme: String?, bundleID: String?, gameName: String, completion: @escaping (Bool, String) -> Void) {
         
         // 1. Thử mở bằng Bundle ID qua LSApplicationWorkspace (Objective-C Runtime)
         if let bid = bundleID?.trimmingCharacters(in: .whitespacesAndNewlines), !bid.isEmpty {
             if openViaBundleID(bid) {
-                completion(true, "Đang mở \(gameName) qua Bundle ID...")
+                completion(true, "Đang mở \(gameName)...")
                 return
             }
         }
         
-        // 2. Thử mở bằng URL Scheme trực tiếp
+        // 2. Thu thập danh sách URL Schemes tiềm năng
+        var schemesToTry: [String] = []
         if let s = scheme?.trimmingCharacters(in: .whitespacesAndNewlines), !s.isEmpty {
-            let cleanScheme = s.hasSuffix("://") ? s : (s.contains("://") ? s : "\(s)://")
-            if let url = URL(string: cleanScheme) {
-                UIApplication.shared.open(url, options: [:]) { success in
-                    if success {
-                        completion(true, "Đang mở \(gameName)...")
-                    } else {
-                        // Thử giải pháp 3: Mở qua Apple Shortcuts nếu có
-                        self.tryShortcutsFallback(gameName: gameName, completion: completion)
-                    }
-                }
-                return
-            }
+            schemesToTry.append(s)
         }
         
-        // 3. Fallback: Mở qua Apple Shortcuts
-        tryShortcutsFallback(gameName: gameName, completion: completion)
+        let lower = gameName.lowercased()
+        if lower.contains("liên quân") || lower.contains("lien quan") {
+            schemesToTry.append(contentsOf: ["kgvn://", "garena-kgvn://", "com.garena.game.kgvn://", "garena://"])
+        } else if lower.contains("võ lâm") || lower.contains("vo lam") {
+            schemesToTry.append(contentsOf: ["vng-vltk://", "vltk://"])
+        } else if lower.contains("free fire") {
+            schemesToTry.append(contentsOf: ["freefireth://", "freefire://"])
+        }
+        
+        trySchemes(schemesToTry, index: 0, gameName: gameName) { success, msg in
+            if success {
+                completion(true, msg)
+            } else {
+                // 3. Fallback: Mở qua Apple Shortcuts với các biến thể tên
+                self.tryShortcutsFallback(gameName: gameName, completion: completion)
+            }
+        }
+    }
+    
+    private func trySchemes(_ schemes: [String], index: Int, gameName: String, completion: @escaping (Bool, String) -> Void) {
+        guard index < schemes.count else {
+            completion(false, "Không mở được bằng URL Scheme.")
+            return
+        }
+        
+        let raw = schemes[index].trimmingCharacters(in: .whitespacesAndNewlines)
+        let clean = raw.hasSuffix("://") ? raw : (raw.contains("://") ? raw : "\(raw)://")
+        
+        guard let url = URL(string: clean) else {
+            trySchemes(schemes, index: index + 1, gameName: gameName, completion: completion)
+            return
+        }
+        
+        UIApplication.shared.open(url, options: [:]) { success in
+            if success {
+                completion(true, "Đang mở \(gameName)...")
+            } else {
+                self.trySchemes(schemes, index: index + 1, gameName: gameName, completion: completion)
+            }
+        }
     }
     
     private func openViaBundleID(_ bundleID: String) -> Bool {
@@ -52,18 +80,35 @@ public class AppLauncher {
     }
     
     private func tryShortcutsFallback(gameName: String, completion: @escaping (Bool, String) -> Void) {
-        // Thử mở phím tắt trùng tên game nếu người dùng đã tạo trong Shortcuts
-        let encodedName = gameName.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? ""
-        if let shortcutUrl = URL(string: "shortcuts://run-shortcut?name=\(encodedName)") {
-            UIApplication.shared.open(shortcutUrl, options: [:]) { opened in
-                if opened {
-                    completion(true, "Đang mở \(gameName) qua Phím tắt iOS...")
+        var names: [String] = [gameName]
+        let lower = gameName.lowercased()
+        if lower.contains("liên quân") || lower.contains("lien quan") {
+            names.append(contentsOf: ["Liên quân", "Liên Quân", "Liên Quân Mobile", "Lien Quan", "lienquan"])
+        } else if lower.contains("võ lâm") || lower.contains("vo lam") {
+            names.append(contentsOf: ["Võ Lâm", "Võ Lâm Truyền Kỳ", "Vo Lam"])
+        }
+        
+        tryShortcutNames(names, index: 0, gameName: gameName, completion: completion)
+    }
+    
+    private func tryShortcutNames(_ names: [String], index: Int, gameName: String, completion: @escaping (Bool, String) -> Void) {
+        guard index < names.count else {
+            completion(false, "Đã nạp tài khoản! Hãy mở game và bấm Quả địa cầu 🌐 trên bàn phím để điền.")
+            return
+        }
+        
+        let targetName = names[index]
+        let encoded = targetName.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? ""
+        if let shortcutUrl = URL(string: "shortcuts://run-shortcut?name=\(encoded)") {
+            UIApplication.shared.open(shortcutUrl, options: [:]) { success in
+                if success {
+                    completion(true, "Đang mở \(gameName) qua Phím tắt '\(targetName)'...")
                 } else {
-                    completion(false, "Không mở được trực tiếp. Đã nạp tài khoản, hãy vuốt sang \(gameName) để AutoFill!")
+                    self.tryShortcutNames(names, index: index + 1, gameName: gameName, completion: completion)
                 }
             }
         } else {
-            completion(false, "Đã nạp tài khoản vào hàng đợi. Hãy mở \(gameName) để AutoFill!")
+            tryShortcutNames(names, index: index + 1, gameName: gameName, completion: completion)
         }
     }
 }

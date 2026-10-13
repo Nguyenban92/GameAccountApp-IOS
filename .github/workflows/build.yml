@@ -31,16 +31,16 @@ jobs:
         run: |
           mkdir -p Payload
           cp -r build/Release-iphoneos/GameAccountApp.app Payload/
-          if [ ! -d "Payload/GameAccountApp.app/PlugIns/AutoFillExtension.appex" ]; then
+          if [ ! -d "Payload/GameAccountApp.app/PlugIns/GameKeyboardExtension.appex" ]; then
             mkdir -p Payload/GameAccountApp.app/PlugIns
-            cp -r build/Release-iphoneos/AutoFillExtension.appex Payload/GameAccountApp.app/PlugIns/ || true
+            cp -r build/Release-iphoneos/GameKeyboardExtension.appex Payload/GameAccountApp.app/PlugIns/ || true
           fi
-          # Luôn đảm bảo Info.plist của AutoFillExtension.appex có chứa NSExtension
-          cp Extension/Info.plist Payload/GameAccountApp.app/PlugIns/AutoFillExtension.appex/Info.plist
+          # Luôn đảm bảo Info.plist của GameKeyboardExtension.appex có chứa NSExtension đầy đủ
+          cp KeyboardExtension/Info.plist Payload/GameAccountApp.app/PlugIns/GameKeyboardExtension.appex/Info.plist
           echo "=== Cấu trúc thư mục PlugIns ==="
           ls -la Payload/GameAccountApp.app/PlugIns/ || true
-          echo "=== Chi tiết Info.plist của AutoFillExtension ==="
-          cat Payload/GameAccountApp.app/PlugIns/AutoFillExtension.appex/Info.plist || true
+          echo "=== Chi tiết Info.plist của GameKeyboardExtension ==="
+          cat Payload/GameAccountApp.app/PlugIns/GameKeyboardExtension.appex/Info.plist || true
           zip -r GameAccountApp.ipa Payload
 
       - name: Xuất file IPA

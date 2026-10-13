@@ -675,8 +675,22 @@ struct ContentView: View {
             saveCurrentState()
         }
         
-        // Copy to clipboard as universal fallback
-        UIPasteboard.general.string = "\(acc.username)\t\(acc.password)"
+        // Prepare structured payload for Game Keyboard Extension
+        let payloadAccounts = game.accounts.map {
+            KeyboardPayloadAccount(username: $0.username, password: $0.password, server: $0.server)
+        }
+        let payload = KeyboardPayloadData(
+            gameTitle: game.title,
+            currentUsername: acc.username,
+            currentPassword: acc.password,
+            accounts: payloadAccounts
+        )
+        if let jsonData = try? JSONEncoder().encode(payload),
+           let jsonStr = String(data: jsonData, encoding: .utf8) {
+            UIPasteboard.general.string = "GAMEACC::\(jsonStr)"
+        } else {
+            UIPasteboard.general.string = "\(acc.username)\t\(acc.password)"
+        }
         
         // Open Game directly via AppLauncher (LSApplicationWorkspace, URL Scheme, Shortcuts)
         AppLauncher.shared.launchGame(scheme: game.urlScheme, bundleID: game.bundleID, gameName: game.title) { success, msg in
@@ -1209,23 +1223,23 @@ struct ContentView: View {
         }
     }
     
-    // MARK: - AutoFill Native Guide Sheet
+    // MARK: - Game Keyboard Guide Sheet
     var autoFillGuideSheetView: some View {
         NavigationView {
             ScrollView {
                 VStack(alignment: .leading, spacing: 14) {
-                    Text("Cách Bật AutoFill Tự Động Trong Game")
+                    Text("Bàn Phím Game Trợ Thủ (Điền 1 Chạm)")
                         .font(.title2).bold()
                         .padding(.top)
                     
-                    Text("Khi mở game chạm vào ô Tài khoản/Mật khẩu, ngay trên bàn phím iOS sẽ tự động xuất hiện thanh danh sách tài khoản để bạn bấm 1 chạm là tự điền xong cả User lẫn Pass!")
+                    Text("Giải pháp tự động điền tối ưu nhất cho Liên Quân và mọi tựa game iOS! Chỉ cần bấm Quả địa cầu 🌐 trên bàn phím là hiện sẵn 2 nút Điền ID và Điền Pass.")
                         .font(.subheadline)
                         .foregroundColor(.gray)
                     
-                    VStack(alignment: .leading, spacing: 10) {
-                        stepItem(num: "1", title: "Cài đặt IPA giữ lại Extension", desc: "Dùng Sideloadly hoặc AltStore trên máy tính (hoặc TrollStore) để giữ lại Tiện ích bàn phím AutoFill. Nếu dùng eSign, hãy bật 'Ký tất cả plugin'.")
-                        stepItem(num: "2", title: "Bật quyền bàn phím trên iOS", desc: "Vào Cài đặt (Settings) iPhone ➡️ Mật khẩu (Passwords) ➡️ Tùy chọn mật khẩu (Password Options) ➡️ Tích chọn GameAccountApp.")
-                        stepItem(num: "3", title: "Đăng nhập 1 chạm khi vào game", desc: "Chạm vào ô tài khoản trong game, bấm vào thanh gợi ý trên bàn phím. Danh sách tài khoản của tựa game đó sẽ hiện lên để bạn chọn và tự động dán vào game an toàn!")
+                    VStack(alignment: .leading, spacing: 12) {
+                        stepItem(num: "1", title: "Thêm Bàn phím vào iOS", desc: "Vào Cài đặt (Settings) ➔ Cài đặt chung (General) ➔ Bàn phím (Keyboards) ➔ Bàn phím ➔ Thêm bàn phím mới ➔ Chọn 'Game Keyboard'.")
+                        stepItem(num: "2", title: "Bật Cho phép Truy cập Đầy đủ", desc: "Chạm vào dòng 'Game Keyboard' vừa thêm ➔ Bật công tắc 'Cho phép truy cập đầy đủ' (Allow Full Access) để bàn phím đọc danh sách nick.")
+                        stepItem(num: "3", title: "Điền 1 chạm trong Game", desc: "Mở Liên Quân hoặc bất kỳ game nào, chạm vào ô Tài khoản ➔ Bấm phím Quả địa cầu 🌐 ➔ Chạm [Điền Tài Khoản] và [Điền Mật Khẩu] là xong!")
                     }
                     .padding(.vertical)
                     
@@ -1233,7 +1247,7 @@ struct ContentView: View {
                 }
                 .padding()
             }
-            .navigationTitle("Hướng Dẫn AutoFill")
+            .navigationTitle("Bàn Phím Game")
             .navigationBarItems(trailing: Button("Đóng") { showingAutoFillGuide = false })
         }
     }

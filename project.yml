@@ -8,7 +8,7 @@ targets:
     deploymentTarget: "15.0"
     sources: [App]
     dependencies:
-      - target: AutoFillExtension
+      - target: GameKeyboardExtension
         embed: true
     settings:
       base:
@@ -17,35 +17,36 @@ targets:
         INFOPLIST_KEY_UIApplicationSceneManifest_Generation: "YES"
         INFOPLIST_KEY_UILaunchScreen_Generation: "YES"
         INFOPLIST_KEY_NSPhotoLibraryUsageDescription: "Ứng dụng cần quyền truy cập ảnh để bạn chọn ảnh đại diện cho các tựa game."
-        INFOPLIST_KEY_LSApplicationQueriesSchemes: "garena-kgvn lienquanmobile garena vng-vltk volam freefire freefireth roblox igmobile riotgames genshinimpact shortcuts"
-        # Bật App Groups cho App chính
-        CODE_SIGN_ENTITLEMENTS: "App/GameAccountApp.entitlements"
+        INFOPLIST_KEY_LSApplicationQueriesSchemes: "garena-kgvn kgvn lienquanmobile garena vng-vltk volam freefire freefireth roblox igmobile riotgames genshinimpact shortcuts"
 
-  AutoFillExtension:
+  GameKeyboardExtension:
     type: app-extension
     platform: iOS
     deploymentTarget: "15.0"
     sources:
-      - path: Extension
+      - path: KeyboardExtension
         excludes:
           - "*.entitlements"
           - "Info.plist"
     info:
-      path: Extension/Info.plist
+      path: KeyboardExtension/Info.plist
       properties:
-        CFBundleDisplayName: AutoFillExtension
-        CFBundleName: AutoFillExtension
-        CFBundleExecutable: AutoFillExtension
-        CFBundleIdentifier: com.ban.GameAccountApp.AutoFillExtension
+        CFBundleDisplayName: "Game Keyboard"
+        CFBundleName: "GameKeyboardExtension"
+        CFBundleExecutable: "GameKeyboardExtension"
+        CFBundleIdentifier: "com.ban.GameAccountApp.GameKeyboardExtension"
         CFBundleShortVersionString: "1.0"
         CFBundleVersion: "1"
         CFBundlePackageType: "XPC!"
         NSExtension:
-          NSExtensionPointIdentifier: com.apple.authentication-services-credential-provider-ui
-          NSExtensionPrincipalClass: AutoFillExtension.CredentialProviderViewController
+          NSExtensionPointIdentifier: "com.apple.keyboard-service"
+          NSExtensionPrincipalClass: "GameKeyboardExtension.KeyboardViewController"
+          NSExtensionAttributes:
+            IsASCIICapable: false
+            PrefersRightToLeft: false
+            PrimaryLanguage: "vi-VN"
+            RequestsOpenAccess: true
     settings:
       base:
-        PRODUCT_BUNDLE_IDENTIFIER: "com.ban.GameAccountApp.AutoFillExtension"
+        PRODUCT_BUNDLE_IDENTIFIER: "com.ban.GameAccountApp.GameKeyboardExtension"
         GENERATE_INFOPLIST_FILE: "NO"
-        # Bật App Groups cho Extension
-        CODE_SIGN_ENTITLEMENTS: "Extension/AutoFillExtension.entitlements"
