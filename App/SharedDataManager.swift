@@ -6,23 +6,25 @@ public struct PresetGame: Identifiable {
     public var id = UUID()
     public var name: String
     public var scheme: String
+    public var bundleID: String
     public var icon: String
     
-    public init(name: String, scheme: String, icon: String) {
+    public init(name: String, scheme: String, bundleID: String, icon: String) {
         self.name = name
         self.scheme = scheme
+        self.bundleID = bundleID
         self.icon = icon
     }
 }
 
 public let PRESET_GAMES: [PresetGame] = [
-    PresetGame(name: "Liên Quân Mobile", scheme: "lienquanmobile://", icon: "shield.lefthalf.filled"),
-    PresetGame(name: "Võ Lâm Truyền Kỳ", scheme: "volam://", icon: "flame.fill"),
-    PresetGame(name: "Tốc Chiến (Wild Rift)", scheme: "riotgames://", icon: "bolt.fill"),
-    PresetGame(name: "Free Fire", scheme: "freefire://", icon: "cross.fill"),
-    PresetGame(name: "PUBG Mobile", scheme: "igmobile://", icon: "scope"),
-    PresetGame(name: "Roblox", scheme: "roblox://", icon: "cube.fill"),
-    PresetGame(name: "Genshin Impact", scheme: "genshinimpact://", icon: "sparkles")
+    PresetGame(name: "Liên Quân Mobile", scheme: "garena-kgvn://", bundleID: "com.garena.game.kgvn", icon: "shield.lefthalf.filled"),
+    PresetGame(name: "Võ Lâm Truyền Kỳ", scheme: "vng-vltk://", bundleID: "com.vng.vltk", icon: "flame.fill"),
+    PresetGame(name: "Tốc Chiến (Wild Rift)", scheme: "riotgames://", bundleID: "com.riotgames.league.wildriftvn", icon: "bolt.fill"),
+    PresetGame(name: "Free Fire", scheme: "freefireth://", bundleID: "com.dts.freefireth", icon: "cross.fill"),
+    PresetGame(name: "PUBG Mobile", scheme: "igmobile://", bundleID: "com.vng.pubgmobile", icon: "scope"),
+    PresetGame(name: "Roblox", scheme: "roblox://", bundleID: "com.roblox.robloxmobile", icon: "cube.fill"),
+    PresetGame(name: "Genshin Impact", scheme: "genshinimpact://", bundleID: "com.miHoYo.GenshinImpact", icon: "sparkles")
 ]
 
 public struct LoginLog: Identifiable, Codable {
@@ -66,18 +68,20 @@ public struct GameProfile: Identifiable, Codable {
     public var title: String
     public var server: String
     public var icon: String
-    public var urlScheme: String? // URL Scheme để tự động mở game khi bấm Login (vd: lienquanmobile://)
+    public var urlScheme: String? // URL Scheme (vd: garena-kgvn://)
+    public var bundleID: String?  // Bundle ID (vd: com.garena.game.kgvn)
     public var customImageData: Data?
     public var accounts: [GameAccount]
     public var currentQueueIndex: Int
     public var logs: [LoginLog]
     
-    public init(id: UUID = UUID(), title: String, server: String = "Asia", icon: String = "gamecontroller.fill", urlScheme: String? = nil, customImageData: Data? = nil, accounts: [GameAccount] = [], currentQueueIndex: Int = 0, logs: [LoginLog] = []) {
+    public init(id: UUID = UUID(), title: String, server: String = "Asia", icon: String = "gamecontroller.fill", urlScheme: String? = nil, bundleID: String? = nil, customImageData: Data? = nil, accounts: [GameAccount] = [], currentQueueIndex: Int = 0, logs: [LoginLog] = []) {
         self.id = id
         self.title = title
         self.server = server
         self.icon = icon
         self.urlScheme = urlScheme
+        self.bundleID = bundleID
         self.customImageData = customImageData
         self.accounts = accounts
         self.currentQueueIndex = currentQueueIndex
@@ -119,13 +123,14 @@ public class SharedDataManager {
            !decoded.isEmpty {
             return decoded
         }
-        // Initial sample games
+        // Initial sample games with real bundleIDs and schemes
         let initialGames = [
             GameProfile(
                 title: "Liên Quân Mobile",
                 server: "Việt Nam",
                 icon: "shield.lefthalf.filled",
-                urlScheme: "lienquanmobile://",
+                urlScheme: "garena-kgvn://",
+                bundleID: "com.garena.game.kgvn",
                 accounts: [
                     GameAccount(username: "AthanorPro", password: "LienQuan#2026", server: "VN", levelOrRank: "Cao Thủ", status: "Chờ đăng nhập"),
                     GameAccount(username: "Valhein69", password: "XaThuGank#1", server: "VN", levelOrRank: "Tinh Anh", status: "Chờ đăng nhập")
@@ -135,7 +140,8 @@ public class SharedDataManager {
                 title: "Võ Lâm Truyền Kỳ",
                 server: "Biện Kinh",
                 icon: "flame.fill",
-                urlScheme: "volam://",
+                urlScheme: "vng-vltk://",
+                bundleID: "com.vng.vltk",
                 accounts: [
                     GameAccount(username: "VoLamBangChu", password: "ThienHaVoSong#1", server: "S1", levelOrRank: "Lv. 89", status: "Chờ đăng nhập")
                 ]
@@ -145,6 +151,7 @@ public class SharedDataManager {
                 server: "Asia",
                 icon: "bolt.shield.fill",
                 urlScheme: nil,
+                bundleID: nil,
                 accounts: [
                     GameAccount(username: "ShadowBlade", password: "Pass12345@", server: "Asia", levelOrRank: "Lv. 82", status: "Chờ đăng nhập"),
                     GameAccount(username: "CyberNinja99", password: "NinjaSecure#9", server: "Asia", levelOrRank: "Lv. 75", status: "Chờ đăng nhập")

@@ -20,6 +20,7 @@ struct ContentView: View {
     @State private var tempGameTitle = ""
     @State private var tempGameServer = "Asia"
     @State private var tempGameScheme = ""
+    @State private var tempGameBundleID = ""
     @State private var tempSelectedImage: UIImage? = nil
     
     // Temporary variables for Account Creation
@@ -310,20 +311,22 @@ struct ContentView: View {
                 Spacer()
                 
                 // Button Launch Game Directly
-                if let scheme = game.urlScheme, !scheme.isEmpty {
-                    Button(action: { openGameApp(scheme: scheme, gameName: game.title) }) {
-                        HStack(spacing: 3) {
-                            Image(systemName: "arrow.up.forward.app.fill")
-                            Text("Mở Game")
-                        }
-                        .font(.system(size: 10, weight: .bold))
-                        .foregroundColor(.green)
-                        .padding(.horizontal, 8)
-                        .padding(.vertical, 5)
-                        .background(Color.green.opacity(0.15))
-                        .cornerRadius(8)
-                        .overlay(RoundedRectangle(cornerRadius: 8).stroke(Color.green.opacity(0.4), lineWidth: 1))
+                Button(action: {
+                    AppLauncher.shared.launchGame(scheme: game.urlScheme, bundleID: game.bundleID, gameName: game.title) { success, msg in
+                        showToast(msg)
                     }
+                }) {
+                    HStack(spacing: 3) {
+                        Image(systemName: "arrow.up.forward.app.fill")
+                        Text("Mở Game")
+                    }
+                    .font(.system(size: 10, weight: .bold))
+                    .foregroundColor(.green)
+                    .padding(.horizontal, 8)
+                    .padding(.vertical, 5)
+                    .background(Color.green.opacity(0.15))
+                    .cornerRadius(8)
+                    .overlay(RoundedRectangle(cornerRadius: 8).stroke(Color.green.opacity(0.4), lineWidth: 1))
                 }
                 
                 // Button Add Account to this specific game
@@ -675,29 +678,9 @@ struct ContentView: View {
         // Copy to clipboard as universal fallback
         UIPasteboard.general.string = "\(acc.username)\t\(acc.password)"
         
-        // Open Game directly via URL Scheme if configured!
-        if let scheme = game.urlScheme, !scheme.trimmingCharacters(in: .whitespaces).isEmpty, let url = URL(string: scheme) {
-            UIApplication.shared.open(url, options: [:]) { success in
-                if success {
-                    showToast("Đang nhảy vào \(game.title) & sẵn sàng AutoFill!")
-                } else {
-                    showToast("Đã kích hoạt @\(acc.username). Mở game để AutoFill!")
-                }
-            }
-        } else {
-            showToast("Đã kích hoạt @\(acc.username)! Hãy mở game để AutoFill.")
-        }
-    }
-    
-    func openGameApp(scheme: String, gameName: String) {
-        if let url = URL(string: scheme) {
-            UIApplication.shared.open(url, options: [:]) { success in
-                if success {
-                    showToast("Đang mở \(gameName)...")
-                } else {
-                    showToast("Không tìm thấy app game này trên máy!")
-                }
-            }
+        // Open Game directly via AppLauncher (LSApplicationWorkspace, URL Scheme, Shortcuts)
+        AppLauncher.shared.launchGame(scheme: game.urlScheme, bundleID: game.bundleID, gameName: game.title) { success, msg in
+            showToast(msg)
         }
     }
     
@@ -760,6 +743,7 @@ struct ContentView: View {
         tempGameTitle = ""
         tempGameServer = "Asia"
         tempGameScheme = ""
+        tempGameBundleID = ""
         tempSelectedImage = nil
         showingAddGame = true
     }
@@ -768,6 +752,7 @@ struct ContentView: View {
         tempGameTitle = game.title
         tempGameServer = game.server
         tempGameScheme = game.urlScheme ?? ""
+        tempGameBundleID = game.bundleID ?? ""
         if let data = game.customImageData {
             tempSelectedImage = UIImage(data: data)
         } else {
@@ -788,13 +773,14 @@ struct ContentView: View {
     var addGameSheetView: some View {
         NavigationView {
             Form {
-                Section(header: Text("Chọn Game Phổ Biến (Tự Động Nhận Diện)")) {
+                Section(header: Text("Chọn Game Phổ Biến (Tự Động Điền Nhận Diện)")) {
                     ScrollView(.horizontal, showsIndicators: false) {
                         HStack(spacing: 8) {
                             ForEach(PRESET_GAMES) { pg in
                                 Button(action: {
                                     tempGameTitle = pg.name
                                     tempGameScheme = pg.scheme
+                                    tempGameBundleID = pg.bundleID
                                 }) {
                                     HStack(spacing: 4) {
                                         Image(systemName: pg.icon)
@@ -816,7 +802,19 @@ struct ContentView: View {
                 Section(header: Text("Thông tin Game")) {
                     TextField("Tên game (vd: Liên Quân Mobile)", text: $tempGameTitle)
                     TextField("Server mặc định (vd: Asia, VN)", text: $tempGameServer)
-                    TextField("URL Scheme mở game (vd: lienquanmobile://)", text: $tempGameScheme)
+                }
+                
+                Section(header: Text("Định danh mở game (Bundle ID / URL Scheme)")) {
+                    TextField("Bundle ID (vd: com.garena.game.kgvn)", text: $tempGameBundleID)
+                    TextField("URL Scheme (vd: garena-kgvn://)", text: $tempGameScheme)
+                    
+                    Button("Thử mở Game ngay ➔") {
+                        AppLauncher.shared.launchGame(scheme: tempGameScheme, bundleID: tempGameBundleID, gameName: tempGameTitle) { success, msg in
+                            showToast(msg)
+                        }
+                    }
+                    .font(.caption)
+                    .foregroundColor(.green)
                 }
                 
                 Section(header: Text("Ảnh đại diện vuông (1:1)")) {
@@ -843,6 +841,7 @@ struct ContentView: View {
                             title: title,
                             server: tempGameServer,
                             urlScheme: tempGameScheme.isEmpty ? nil : tempGameScheme,
+                            bundleID: tempGameBundleID.isEmpty ? nil : tempGameBundleID,
                             customImageData: tempSelectedImage?.jpegData(compressionQuality: 0.7)
                         )
                         games.append(newGame)
@@ -862,13 +861,14 @@ struct ContentView: View {
     var editGameSheetView: some View {
         NavigationView {
             Form {
-                Section(header: Text("Chọn Game Phổ Biến (Tự Động Nhận Diện)")) {
+                Section(header: Text("Chọn Game Phổ Biến (Tự Động Điền Nhận Diện)")) {
                     ScrollView(.horizontal, showsIndicators: false) {
                         HStack(spacing: 8) {
                             ForEach(PRESET_GAMES) { pg in
                                 Button(action: {
                                     tempGameTitle = pg.name
                                     tempGameScheme = pg.scheme
+                                    tempGameBundleID = pg.bundleID
                                 }) {
                                     HStack(spacing: 4) {
                                         Image(systemName: pg.icon)
@@ -890,7 +890,19 @@ struct ContentView: View {
                 Section(header: Text("Sửa thông tin Game")) {
                     TextField("Tên game", text: $tempGameTitle)
                     TextField("Server mặc định", text: $tempGameServer)
-                    TextField("URL Scheme mở game (vd: lienquanmobile://)", text: $tempGameScheme)
+                }
+                
+                Section(header: Text("Định danh mở game (Bundle ID / URL Scheme)")) {
+                    TextField("Bundle ID (vd: com.garena.game.kgvn)", text: $tempGameBundleID)
+                    TextField("URL Scheme (vd: garena-kgvn://)", text: $tempGameScheme)
+                    
+                    Button("Thử mở Game ngay ➔") {
+                        AppLauncher.shared.launchGame(scheme: tempGameScheme, bundleID: tempGameBundleID, gameName: tempGameTitle) { success, msg in
+                            showToast(msg)
+                        }
+                    }
+                    .font(.caption)
+                    .foregroundColor(.green)
                 }
                 
                 Section(header: Text("Ảnh đại diện vuông (1:1)")) {
@@ -937,6 +949,7 @@ struct ContentView: View {
                         games[selectedGameIndex].title = title
                         games[selectedGameIndex].server = tempGameServer
                         games[selectedGameIndex].urlScheme = tempGameScheme.isEmpty ? nil : tempGameScheme
+                        games[selectedGameIndex].bundleID = tempGameBundleID.isEmpty ? nil : tempGameBundleID
                         if let img = tempSelectedImage {
                             games[selectedGameIndex].customImageData = img.jpegData(compressionQuality: 0.7)
                         }
