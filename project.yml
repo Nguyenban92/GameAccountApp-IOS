@@ -1,0 +1,34 @@
+name: GameAccountApp
+options:
+  bundleIdPrefix: com.ban
+targets:
+  GameAccountApp:
+    type: application
+    platform: iOS
+    deploymentTarget: "15.0"
+    sources: [App]
+    dependencies:
+      - target: AutoFillExtension
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: "com.ban.GameAccountApp"
+        GENERATE_INFOPLIST_FILE: "YES"
+        INFOPLIST_KEY_UIApplicationSceneManifest_Generation: "YES"
+        INFOPLIST_KEY_UILaunchScreen_Generation: "YES"
+        # Bật App Groups cho App chính
+        CODE_SIGN_ENTITLEMENTS: "App/GameAccountApp.entitlements"
+
+  AutoFillExtension:
+    type: app-extension
+    platform: iOS
+    deploymentTarget: "15.0"
+    sources: [Extension]
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: "com.ban.GameAccountApp.AutoFillExtension"
+        GENERATE_INFOPLIST_FILE: "YES"
+        INFOPLIST_KEY_NSExtension_NSExtensionPointIdentifier: "com.apple.authentication-services-credential-provider-ui"
+        INFOPLIST_KEY_NSExtension_NSExtensionPrincipalClass: "$(PRODUCT_MODULE_NAME).CredentialProviderViewController"
+        NSExtensionPointIdentifier: "com.apple.authentication-services-credential-provider-ui"
+        # Bật App Groups cho Extension
+        CODE_SIGN_ENTITLEMENTS: "Extension/AutoFillExtension.entitlements"

@@ -1,0 +1,43 @@
+name: Build iOS App
+
+on: [push, workflow_dispatch]
+
+jobs:
+  build:
+    runs-on: macos-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Cài đặt XcodeGen
+        run: brew install xcodegen
+
+      - name: Tự động tạo dự án Xcode
+        run: xcodegen generate
+
+      - name: Biên dịch ứng dụng (Bỏ qua ký chứng chỉ)
+        run: |
+          xcodebuild clean build \
+            -project GameAccountApp.xcodeproj \
+            -scheme GameAccountApp \
+            -sdk iphoneos \
+            -configuration Release \
+            SYMROOT="$(PWD)/build" \
+            CODE_SIGN_IDENTITY="" \
+            CODE_SIGNING_REQUIRED=NO \
+            CODE_SIGNING_ALLOWED=NO
+
+      - name: Đóng gói thành file .ipa
+        run: |
+          mkdir -p Payload
+          cp -r build/Release-iphoneos/GameAccountApp.app Payload/
+          # Copy Extension vào bên trong App
+          mkdir -p Payload/GameAccountApp.app/PlugIns
+          cp -r build/Release-iphoneos/AutoFillExtension.appex Payload/GameAccountApp.app/PlugIns/ || true
+          zip -r GameAccountApp.ipa Payload
+
+      - name: Xuất file IPA
+        uses: actions/upload-artifact@v4
+        with:
+          name: GameAccountApp-IPA
+          path: GameAccountApp.ipa
