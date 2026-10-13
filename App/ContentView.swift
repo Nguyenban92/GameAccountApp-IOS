@@ -27,7 +27,14 @@ struct ContentView: View {
     @State private var tempAccUser = ""
     @State private var tempAccPass = ""
     @State private var tempAccServer = "Asia"
-    @State private var tempAccRank = "Lv. 1"
+    // Edit Account states
+    @State private var showingEditAccount = false
+    @State private var editingAccountID: UUID? = nil
+    @State private var editAccUser = ""
+    @State private var editAccPass = ""
+    @State private var editAccServer = ""
+    @State private var editAccRank = ""
+    @State private var editAccStatus = "Chờ đăng nhập"
     
     // Import / Export states
     @State private var importPasteText = ""
@@ -132,6 +139,7 @@ struct ContentView: View {
         .sheet(isPresented: $showingAddGame) { addGameSheetView }
         .sheet(isPresented: $showingEditGame) { editGameSheetView }
         .sheet(isPresented: $showingAddAccount) { addAccountSheetView }
+        .sheet(isPresented: $showingEditAccount) { editAccountSheetView }
         .sheet(isPresented: $showingImportSheet) { importSheetView }
         .sheet(isPresented: $showingExportSheet) { exportSheetView }
         .sheet(isPresented: $showingLogsSheet) { logsSheetView }
@@ -174,19 +182,19 @@ struct ContentView: View {
             Spacer()
             
             HStack(spacing: 6) {
-                // Zalo Contact Button
+                // Nút Liên Hệ Zalo (chỉ có icon Zalo và chữ "Liên Hệ")
                 Button(action: {
                     if let url = URL(string: "https://zalo.me/0779977792") {
                         UIApplication.shared.open(url)
                     }
                 }) {
-                    HStack(spacing: 3) {
+                    HStack(spacing: 4) {
                         Image(systemName: "message.fill")
-                        Text("Zalo")
+                        Text("Liên Hệ")
                     }
                     .font(.system(size: 11, weight: .bold))
                     .foregroundColor(Color(red: 0.2, green: 0.7, blue: 1.0))
-                    .padding(.horizontal, 8)
+                    .padding(.horizontal, 9)
                     .padding(.vertical, 6)
                     .background(Color(red: 0.0, green: 0.45, blue: 0.95).opacity(0.18))
                     .cornerRadius(10)
@@ -585,66 +593,10 @@ struct ContentView: View {
         }
     }
     
-    // MARK: - Zalo VIP Support Card
-    var zaloSupportCard: some View {
-        Button(action: {
-            if let url = URL(string: "https://zalo.me/0779977792") {
-                UIApplication.shared.open(url)
-            }
-        }) {
-            HStack(spacing: 10) {
-                ZStack {
-                    RoundedRectangle(cornerRadius: 8)
-                        .fill(LinearGradient(colors: [Color(red: 0.0, green: 0.5, blue: 1.0), Color.blue], startPoint: .topLeading, endPoint: .bottomTrailing))
-                        .frame(width: 32, height: 32)
-                    Image(systemName: "message.fill")
-                        .foregroundColor(.white)
-                        .font(.system(size: 14))
-                }
-                
-                VStack(alignment: .leading, spacing: 1) {
-                    HStack(spacing: 6) {
-                        Text("LIÊN HỆ & HỖ TRỢ ZALO:")
-                            .font(.system(size: 10, weight: .heavy))
-                            .foregroundColor(Color(red: 0.3, green: 0.75, blue: 1.0))
-                        Text("0779977792")
-                            .font(.system(size: 11, weight: .bold, design: .monospaced))
-                            .foregroundColor(.white)
-                    }
-                    Text("Chạm để mở Zalo trực tiếp hỗ trợ tool & nạp nick")
-                        .font(.system(size: 9))
-                        .foregroundColor(.gray)
-                }
-                
-                Spacer()
-                
-                HStack(spacing: 2) {
-                    Text("Chat Zalo")
-                        .font(.system(size: 10, weight: .bold))
-                    Image(systemName: "arrow.up.right")
-                        .font(.system(size: 9))
-                }
-                .foregroundColor(.cyan)
-                .padding(.horizontal, 8)
-                .padding(.vertical, 4)
-                .background(Color.cyan.opacity(0.15))
-                .cornerRadius(6)
-            }
-            .padding(.horizontal, 10)
-            .padding(.vertical, 7)
-            .background(Color(red: 0.06, green: 0.1, blue: 0.18))
-            .cornerRadius(10)
-            .overlay(RoundedRectangle(cornerRadius: 10).stroke(Color.cyan.opacity(0.25), lineWidth: 1))
-        }
-    }
-    
     // MARK: - Account Cards List
     var accountListView: some View {
         ScrollView {
             LazyVStack(spacing: 10) {
-                // Zalo VIP Support Card
-                zaloSupportCard
-                
                 if filteredAccounts.isEmpty {
                     VStack(spacing: 8) {
                         Image(systemName: "tray")
@@ -665,7 +617,7 @@ struct ContentView: View {
                         let acc = filteredAccounts[accIdx]
                         let isCurrentQueue = isAccountCurrentInQueue(acc)
                         
-                        accountCard(acc: acc, isCurrentInQueue: isCurrentQueue)
+                        accountCard(acc: acc, index: accIdx + 1, isCurrentInQueue: isCurrentQueue)
                     }
                 }
             }
@@ -674,11 +626,20 @@ struct ContentView: View {
         }
     }
     
-    func accountCard(acc: GameAccount, isCurrentInQueue: Bool) -> some View {
+    func accountCard(acc: GameAccount, index: Int, isCurrentInQueue: Bool) -> some View {
         VStack(spacing: 8) {
             HStack(alignment: .top) {
                 VStack(alignment: .leading, spacing: 3) {
                     HStack(spacing: 6) {
+                        // Số thứ tự tài khoản
+                        Text("#\(index)")
+                            .font(.system(size: 11, weight: .heavy, design: .monospaced))
+                            .foregroundColor(.cyan)
+                            .padding(.horizontal, 6)
+                            .padding(.vertical, 2)
+                            .background(Color.cyan.opacity(0.18))
+                            .cornerRadius(6)
+                        
                         Text(acc.username)
                             .font(.system(size: 14, weight: .bold, design: .monospaced))
                             .foregroundColor(.white)
@@ -715,6 +676,17 @@ struct ContentView: View {
                         .background(Color.green.opacity(0.12))
                         .cornerRadius(6)
                         .overlay(RoundedRectangle(cornerRadius: 6).stroke(Color.green.opacity(0.3), lineWidth: 1))
+                    }
+                    
+                    // Sửa thông tin tài khoản
+                    Button(action: { openEditAccountModal(acc: acc) }) {
+                        Image(systemName: "pencil")
+                            .font(.system(size: 11, weight: .bold))
+                            .foregroundColor(.yellow)
+                            .padding(6)
+                            .background(Color.yellow.opacity(0.15))
+                            .cornerRadius(8)
+                            .overlay(RoundedRectangle(cornerRadius: 8).stroke(Color.yellow.opacity(0.3), lineWidth: 1))
                     }
                     
                     Button(action: {
@@ -763,13 +735,16 @@ struct ContentView: View {
             }
         }
         .padding(12)
-        .background(Color(red: 0.07, green: 0.09, blue: 0.15))
-        .cornerRadius(14)
+        .background(Color(red: 0.08, green: 0.11, blue: 0.18))
+        .cornerRadius(12)
         .overlay(
-            RoundedRectangle(cornerRadius: 14)
-                .stroke(isCurrentInQueue ? Color.cyan : Color.white.opacity(0.08), lineWidth: isCurrentInQueue ? 1.5 : 1)
+            RoundedRectangle(cornerRadius: 12)
+                .stroke(isCurrentInQueue ? Color.cyan : Color.white.opacity(0.06), lineWidth: isCurrentInQueue ? 1.5 : 1)
         )
         .shadow(color: isCurrentInQueue ? Color.cyan.opacity(0.25) : Color.clear, radius: 8, x: 0, y: 2)
+        .onTapGesture(count: 2) {
+            openEditAccountModal(acc: acc)
+        }
     }
     
     func statusBadge(status: String, isQueue: Bool) -> some View {
@@ -927,6 +902,37 @@ struct ContentView: View {
         tempAccServer = currentGame?.server ?? "Asia"
         tempAccRank = "Lv. 1"
         showingAddAccount = true
+    }
+    
+    func openEditAccountModal(acc: GameAccount) {
+        editingAccountID = acc.id
+        editAccUser = acc.username
+        editAccPass = acc.password
+        editAccServer = acc.server
+        editAccRank = acc.levelOrRank
+        editAccStatus = acc.status
+        showingEditAccount = true
+    }
+    
+    func saveEditedAccount() {
+        guard let id = editingAccountID, selectedGameIndex < games.count else {
+            showingEditAccount = false
+            return
+        }
+        if let idx = games[selectedGameIndex].accounts.firstIndex(where: { $0.id == id }) {
+            let u = editAccUser.trimmingCharacters(in: .whitespaces)
+            let p = editAccPass.trimmingCharacters(in: .whitespaces)
+            if !u.isEmpty && !p.isEmpty {
+                games[selectedGameIndex].accounts[idx].username = u
+                games[selectedGameIndex].accounts[idx].password = p
+                games[selectedGameIndex].accounts[idx].server = editAccServer
+                games[selectedGameIndex].accounts[idx].levelOrRank = editAccRank
+                games[selectedGameIndex].accounts[idx].status = editAccStatus
+                saveCurrentState()
+                showToast("Đã cập nhật @\(u)")
+            }
+        }
+        showingEditAccount = false
     }
     
     // MARK: - Add / Edit Game Sheets
@@ -1155,6 +1161,53 @@ struct ContentView: View {
                     }
                     showingAddAccount = false
                 }
+            )
+        }
+    }
+    
+    // MARK: - Edit Account Sheet
+    var editAccountSheetView: some View {
+        NavigationView {
+            Form {
+                Section(header: Text("Chỉnh sửa tài khoản")) {
+                    TextField("Username / Tài khoản", text: $editAccUser)
+                    TextField("Mật khẩu", text: $editAccPass)
+                    TextField("Server", text: $editAccServer)
+                    TextField("Level / Rank / Ghi chú", text: $editAccRank)
+                }
+                
+                Section(header: Text("Trạng thái tài khoản")) {
+                    Picker("Trạng thái", selection: $editAccStatus) {
+                        Text("Chờ đăng nhập").tag("Chờ đăng nhập")
+                        Text("Thành công").tag("Thành công")
+                        Text("Sai mật khẩu").tag("Sai mật khẩu")
+                        Text("Lỗi/Khóa").tag("Lỗi/Khóa")
+                    }
+                    .pickerStyle(.segmented)
+                }
+                
+                Section {
+                    Button(role: .destructive, action: {
+                        if let id = editingAccountID, selectedGameIndex < games.count {
+                            games[selectedGameIndex].accounts.removeAll(where: { $0.id == id })
+                            saveCurrentState()
+                            showToast("Đã xóa tài khoản")
+                        }
+                        showingEditAccount = false
+                    }) {
+                        HStack {
+                            Spacer()
+                            Text("Xóa tài khoản này")
+                                .foregroundColor(.red)
+                            Spacer()
+                        }
+                    }
+                }
+            }
+            .navigationTitle("Sửa Tài Khoản")
+            .navigationBarItems(
+                leading: Button("Hủy") { showingEditAccount = false },
+                trailing: Button("Lưu") { saveEditedAccount() }
             )
         }
     }
