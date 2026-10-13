@@ -12,6 +12,8 @@ targets:
         embed: true
     settings:
       base:
+        MARKETING_VERSION: "1.1"
+        CURRENT_PROJECT_VERSION: "2"
         PRODUCT_BUNDLE_IDENTIFIER: "com.ban.GameAccountApp"
         GENERATE_INFOPLIST_FILE: "YES"
         INFOPLIST_KEY_UIApplicationSceneManifest_Generation: "YES"
@@ -36,8 +38,8 @@ targets:
         CFBundleName: "GameKeyboardExtension"
         CFBundleExecutable: "GameKeyboardExtension"
         CFBundleIdentifier: "com.ban.GameAccountApp.GameKeyboardExtension"
-        CFBundleShortVersionString: "1.0"
-        CFBundleVersion: "1"
+        CFBundleShortVersionString: "1.1"
+        CFBundleVersion: "2"
         CFBundlePackageType: "XPC!"
         NSExtension:
           NSExtensionPointIdentifier: "com.apple.keyboard-service"
