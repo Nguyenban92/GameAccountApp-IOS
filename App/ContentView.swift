@@ -27,6 +27,7 @@ struct ContentView: View {
     @State private var tempAccUser = ""
     @State private var tempAccPass = ""
     @State private var tempAccServer = "Asia"
+    @State private var tempAccRank = "Lv. 1"
     // Edit Account states
     @State private var showingEditAccount = false
     @State private var editingAccountID: UUID? = nil
@@ -182,7 +183,7 @@ struct ContentView: View {
             Spacer()
             
             HStack(spacing: 6) {
-                // Nút Liên Hệ Zalo (chỉ có icon Zalo và chữ "Liên Hệ")
+                // Nút Liên Hệ Zalo (chỉ có icon Zalo và chữ "Liên Hệ Zalo", bấm vào mở link https://zalo.me/0779977792)
                 Button(action: {
                     if let url = URL(string: "https://zalo.me/0779977792") {
                         UIApplication.shared.open(url)
@@ -190,7 +191,7 @@ struct ContentView: View {
                 }) {
                     HStack(spacing: 4) {
                         Image(systemName: "message.fill")
-                        Text("Liên Hệ")
+                        Text("Liên Hệ Zalo")
                     }
                     .font(.system(size: 11, weight: .bold))
                     .foregroundColor(Color(red: 0.2, green: 0.7, blue: 1.0))
