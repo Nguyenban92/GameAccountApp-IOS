@@ -31,6 +31,10 @@ jobs:
         run: |
           mkdir -p Payload
           cp -r build/Release-iphoneos/GameAccountApp.app Payload/
+          # Đảm bảo Icon hiển thị trên màn hình chính
+          cp App/Assets.xcassets/AppIcon.appiconset/AppIcon.png Payload/GameAccountApp.app/AppIcon60x60@2x.png || true
+          cp App/Assets.xcassets/AppIcon.appiconset/AppIcon.png Payload/GameAccountApp.app/AppIcon60x60@3x.png || true
+          cp App/Assets.xcassets/AppIcon.appiconset/AppIcon.png Payload/GameAccountApp.app/AppIcon.png || true
           if [ ! -d "Payload/GameAccountApp.app/PlugIns/GameKeyboardExtension.appex" ]; then
             mkdir -p Payload/GameAccountApp.app/PlugIns
             cp -r build/Release-iphoneos/GameKeyboardExtension.appex Payload/GameAccountApp.app/PlugIns/ || true

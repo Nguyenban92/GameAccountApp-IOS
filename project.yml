@@ -18,6 +18,7 @@ targets:
         INFOPLIST_KEY_UILaunchScreen_Generation: "YES"
         INFOPLIST_KEY_NSPhotoLibraryUsageDescription: "Ứng dụng cần quyền truy cập ảnh để bạn chọn ảnh đại diện cho các tựa game."
         INFOPLIST_KEY_LSApplicationQueriesSchemes: "garena-kgvn kgvn lienquanmobile garena vng-vltk volam freefire freefireth roblox igmobile riotgames genshinimpact shortcuts"
+        ASSETCATALOG_COMPILER_APPICON_NAME: "AppIcon"
 
   GameKeyboardExtension:
     type: app-extension

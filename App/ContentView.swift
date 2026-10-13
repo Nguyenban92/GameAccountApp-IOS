@@ -40,6 +40,17 @@ struct ContentView: View {
     @State private var toastMessage: String? = nil
     @State private var searchText: String = ""
     
+    // Copy Separator preference: "space" (1 khoảng trắng) hoặc "pipe" (dấu |)
+    @AppStorage("copyFormat") private var copyFormat: String = "space"
+    
+    func getFormattedCredentials(acc: GameAccount) -> String {
+        if copyFormat == "pipe" {
+            return "\(acc.username)|\(acc.password)"
+        } else {
+            return "\(acc.username) \(acc.password)"
+        }
+    }
+    
     // Active Game helper
     var currentGame: GameProfile? {
         guard !games.isEmpty && selectedGameIndex >= 0 && selectedGameIndex < games.count else { return nil }
@@ -85,7 +96,12 @@ struct ContentView: View {
                 // Search & Action Toolbar
                 searchAndActionToolbar
                     .padding(.horizontal)
-                    .padding(.bottom, 8)
+                    .padding(.bottom, 4)
+                
+                // Copy Separator Preference Bar
+                copyFormatSelectorBar
+                    .padding(.horizontal)
+                    .padding(.bottom, 6)
                 
                 // Account Cards List
                 accountListView
@@ -157,7 +173,26 @@ struct ContentView: View {
             
             Spacer()
             
-            HStack(spacing: 8) {
+            HStack(spacing: 6) {
+                // Zalo Contact Button
+                Button(action: {
+                    if let url = URL(string: "https://zalo.me/0779977792") {
+                        UIApplication.shared.open(url)
+                    }
+                }) {
+                    HStack(spacing: 3) {
+                        Image(systemName: "message.fill")
+                        Text("Zalo")
+                    }
+                    .font(.system(size: 11, weight: .bold))
+                    .foregroundColor(Color(red: 0.2, green: 0.7, blue: 1.0))
+                    .padding(.horizontal, 8)
+                    .padding(.vertical, 6)
+                    .background(Color(red: 0.0, green: 0.45, blue: 0.95).opacity(0.18))
+                    .cornerRadius(10)
+                    .overlay(RoundedRectangle(cornerRadius: 10).stroke(Color(red: 0.2, green: 0.7, blue: 1.0).opacity(0.4), lineWidth: 1))
+                }
+                
                 Button(action: { showingAutoFillGuide = true }) {
                     HStack(spacing: 4) {
                         Image(systemName: "key.fill")
@@ -165,7 +200,7 @@ struct ContentView: View {
                     }
                     .font(.system(size: 11, weight: .bold))
                     .foregroundColor(.yellow)
-                    .padding(.horizontal, 9)
+                    .padding(.horizontal, 8)
                     .padding(.vertical, 6)
                     .background(Color(red: 0.12, green: 0.11, blue: 0.05))
                     .cornerRadius(10)
@@ -177,9 +212,9 @@ struct ContentView: View {
                         Image(systemName: "plus")
                         Text("Game Mới")
                     }
-                    .font(.system(size: 12, weight: .semibold))
+                    .font(.system(size: 11, weight: .semibold))
                     .foregroundColor(.cyan)
-                    .padding(.horizontal, 10)
+                    .padding(.horizontal, 8)
                     .padding(.vertical, 6)
                     .background(Color(red: 0.08, green: 0.11, blue: 0.18))
                     .cornerRadius(10)
@@ -505,10 +540,111 @@ struct ContentView: View {
         }
     }
     
+    // MARK: - Copy Format Selector Bar
+    var copyFormatSelectorBar: some View {
+        HStack(spacing: 8) {
+            Text("Định dạng dán:")
+                .font(.system(size: 10, weight: .bold))
+                .foregroundColor(.gray)
+            
+            Button(action: {
+                copyFormat = "space"
+                showToast("Đã chọn: ID Pass (1 khoảng trắng)")
+            }) {
+                HStack(spacing: 3) {
+                    Image(systemName: copyFormat == "space" ? "checkmark.circle.fill" : "circle")
+                        .font(.system(size: 9))
+                    Text("1 Khoảng trắng")
+                        .font(.system(size: 10, weight: .bold))
+                }
+                .foregroundColor(copyFormat == "space" ? .cyan : .gray)
+                .padding(.horizontal, 7)
+                .padding(.vertical, 4)
+                .background(copyFormat == "space" ? Color.cyan.opacity(0.15) : Color.white.opacity(0.04))
+                .cornerRadius(6)
+            }
+            
+            Button(action: {
+                copyFormat = "pipe"
+                showToast("Đã chọn: ID|Pass (Dấu gạch đứng)")
+            }) {
+                HStack(spacing: 3) {
+                    Image(systemName: copyFormat == "pipe" ? "checkmark.circle.fill" : "circle")
+                        .font(.system(size: 9))
+                    Text("Dấu gạch |")
+                        .font(.system(size: 10, weight: .bold))
+                }
+                .foregroundColor(copyFormat == "pipe" ? .orange : .gray)
+                .padding(.horizontal, 7)
+                .padding(.vertical, 4)
+                .background(copyFormat == "pipe" ? Color.orange.opacity(0.15) : Color.white.opacity(0.04))
+                .cornerRadius(6)
+            }
+            
+            Spacer()
+        }
+    }
+    
+    // MARK: - Zalo VIP Support Card
+    var zaloSupportCard: some View {
+        Button(action: {
+            if let url = URL(string: "https://zalo.me/0779977792") {
+                UIApplication.shared.open(url)
+            }
+        }) {
+            HStack(spacing: 10) {
+                ZStack {
+                    RoundedRectangle(cornerRadius: 8)
+                        .fill(LinearGradient(colors: [Color(red: 0.0, green: 0.5, blue: 1.0), Color.blue], startPoint: .topLeading, endPoint: .bottomTrailing))
+                        .frame(width: 32, height: 32)
+                    Image(systemName: "message.fill")
+                        .foregroundColor(.white)
+                        .font(.system(size: 14))
+                }
+                
+                VStack(alignment: .leading, spacing: 1) {
+                    HStack(spacing: 6) {
+                        Text("LIÊN HỆ & HỖ TRỢ ZALO:")
+                            .font(.system(size: 10, weight: .heavy))
+                            .foregroundColor(Color(red: 0.3, green: 0.75, blue: 1.0))
+                        Text("0779977792")
+                            .font(.system(size: 11, weight: .bold, design: .monospaced))
+                            .foregroundColor(.white)
+                    }
+                    Text("Chạm để mở Zalo trực tiếp hỗ trợ tool & nạp nick")
+                        .font(.system(size: 9))
+                        .foregroundColor(.gray)
+                }
+                
+                Spacer()
+                
+                HStack(spacing: 2) {
+                    Text("Chat Zalo")
+                        .font(.system(size: 10, weight: .bold))
+                    Image(systemName: "arrow.up.right")
+                        .font(.system(size: 9))
+                }
+                .foregroundColor(.cyan)
+                .padding(.horizontal, 8)
+                .padding(.vertical, 4)
+                .background(Color.cyan.opacity(0.15))
+                .cornerRadius(6)
+            }
+            .padding(.horizontal, 10)
+            .padding(.vertical, 7)
+            .background(Color(red: 0.06, green: 0.1, blue: 0.18))
+            .cornerRadius(10)
+            .overlay(RoundedRectangle(cornerRadius: 10).stroke(Color.cyan.opacity(0.25), lineWidth: 1))
+        }
+    }
+    
     // MARK: - Account Cards List
     var accountListView: some View {
         ScrollView {
             LazyVStack(spacing: 10) {
+                // Zalo VIP Support Card
+                zaloSupportCard
+                
                 if filteredAccounts.isEmpty {
                     VStack(spacing: 8) {
                         Image(systemName: "tray")
@@ -550,14 +686,37 @@ struct ContentView: View {
                         statusBadge(status: acc.status, isQueue: isCurrentInQueue)
                     }
                     
-                    Text("Pass: •••••••••••")
+                    Text("Pass: ••••••••••• (Chạm để copy pass)")
                         .font(.system(size: 11, weight: .regular, design: .monospaced))
                         .foregroundColor(.gray)
+                        .onTapGesture {
+                            UIPasteboard.general.string = acc.password
+                            showToast("Đã copy riêng Pass: \(acc.password)")
+                        }
                 }
                 
                 Spacer()
                 
-                HStack(spacing: 6) {
+                HStack(spacing: 5) {
+                    // Quick Copy Credentials Button
+                    Button(action: {
+                        let formatted = getFormattedCredentials(acc: acc)
+                        UIPasteboard.general.string = formatted
+                        showToast("Đã copy: \(formatted)")
+                    }) {
+                        HStack(spacing: 2) {
+                            Image(systemName: "doc.on.doc.fill")
+                            Text("Copy")
+                        }
+                        .font(.system(size: 10, weight: .bold))
+                        .foregroundColor(.green)
+                        .padding(.horizontal, 7)
+                        .padding(.vertical, 4)
+                        .background(Color.green.opacity(0.12))
+                        .cornerRadius(6)
+                        .overlay(RoundedRectangle(cornerRadius: 6).stroke(Color.green.opacity(0.3), lineWidth: 1))
+                    }
+                    
                     Button(action: {
                         if let g = currentGame {
                             triggerLogin(acc: acc, game: g)
@@ -569,7 +728,7 @@ struct ContentView: View {
                         }
                         .font(.system(size: 11, weight: .bold))
                         .foregroundColor(.cyan)
-                        .padding(.horizontal, 10)
+                        .padding(.horizontal, 9)
                         .padding(.vertical, 4)
                         .background(Color.cyan.opacity(0.15))
                         .cornerRadius(8)
@@ -675,12 +834,13 @@ struct ContentView: View {
             saveCurrentState()
         }
         
-        // Copy clean username to clipboard for instant 1-tap pasting
-        UIPasteboard.general.string = acc.username
+        // Copy credentials according to selected format (1 space or |)
+        let formatted = getFormattedCredentials(acc: acc)
+        UIPasteboard.general.string = formatted
         
         // Open Game directly via AppLauncher (LSApplicationWorkspace, URL Scheme, Shortcuts)
         AppLauncher.shared.launchGame(scheme: game.urlScheme, bundleID: game.bundleID, gameName: game.title) { success, msg in
-            showToast(msg)
+            showToast("Đã copy: \(formatted)")
         }
     }
     
