@@ -675,22 +675,8 @@ struct ContentView: View {
             saveCurrentState()
         }
         
-        // Prepare structured payload for Game Keyboard Extension
-        let payloadAccounts = game.accounts.map {
-            KeyboardPayloadAccount(username: $0.username, password: $0.password, server: $0.server)
-        }
-        let payload = KeyboardPayloadData(
-            gameTitle: game.title,
-            currentUsername: acc.username,
-            currentPassword: acc.password,
-            accounts: payloadAccounts
-        )
-        if let jsonData = try? JSONEncoder().encode(payload),
-           let jsonStr = String(data: jsonData, encoding: .utf8) {
-            UIPasteboard.general.string = "GAMEACC::\(jsonStr)"
-        } else {
-            UIPasteboard.general.string = "\(acc.username)\t\(acc.password)"
-        }
+        // Copy clean username to clipboard for instant 1-tap pasting
+        UIPasteboard.general.string = acc.username
         
         // Open Game directly via AppLauncher (LSApplicationWorkspace, URL Scheme, Shortcuts)
         AppLauncher.shared.launchGame(scheme: game.urlScheme, bundleID: game.bundleID, gameName: game.title) { success, msg in
@@ -1130,6 +1116,21 @@ struct ContentView: View {
                 }
                 
                 Section {
+                    Button(action: { exportToApplePasswordsCSV() }) {
+                        HStack(spacing: 8) {
+                            Image(systemName: "key.fill")
+                                .foregroundColor(.yellow)
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text("Xuất Sang Mật Khẩu iPhone (AutoFill 1 Chạm)")
+                                    .font(.system(size: 13, weight: .bold))
+                                    .foregroundColor(.yellow)
+                                Text("Nạp toàn bộ nick vào nút '🔑 Mật khẩu' của iPhone")
+                                    .font(.system(size: 10))
+                                    .foregroundColor(.gray)
+                            }
+                        }
+                    }
+                    
                     Button("Xuất Thành File TXT Mới (Chia Sẻ)") {
                         exportToNewFile()
                     }
@@ -1139,8 +1140,32 @@ struct ContentView: View {
                     }
                 }
             }
-            .navigationTitle("Lọc & Xuất TXT")
+            .navigationTitle("Lọc & Xuất Tài Khoản")
             .navigationBarItems(trailing: Button("Đóng") { showingExportSheet = false })
+        }
+    }
+    
+    func exportToApplePasswordsCSV() {
+        guard let game = currentGame else { return }
+        var list = game.accounts
+        if exportModeRemoveFailed {
+            list = list.filter { $0.status != "Sai mật khẩu" && $0.status != "Lỗi/Khóa" }
+        }
+        
+        let header = "Title,URL,Username,Password,Notes\n"
+        let domain = game.title.lowercased().contains("liên quân") ? "https://auth.garena.com" : "https://game.login"
+        let rows = list.map {
+            "\"\(game.title)\",\"\(domain)\",\"\($0.username)\",\"\($0.password)\",\"Server: \($0.server)\""
+        }.joined(separator: "\n")
+        
+        let csvContent = header + rows
+        let tempUrl = FileManager.default.temporaryDirectory.appendingPathComponent("\(game.title)_ApplePasswords.csv")
+        try? csvContent.write(to: tempUrl, atomically: true, encoding: .utf8)
+        
+        shareItems = [tempUrl]
+        showingExportSheet = false
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+            showingShareSheet = true
         }
     }
     
