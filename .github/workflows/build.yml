@@ -31,9 +31,14 @@ jobs:
         run: |
           mkdir -p Payload
           cp -r build/Release-iphoneos/GameAccountApp.app Payload/
-          # Copy Extension vào bên trong App
-          mkdir -p Payload/GameAccountApp.app/PlugIns
-          cp -r build/Release-iphoneos/AutoFillExtension.appex Payload/GameAccountApp.app/PlugIns/ || true
+          if [ ! -d "Payload/GameAccountApp.app/PlugIns/AutoFillExtension.appex" ]; then
+            mkdir -p Payload/GameAccountApp.app/PlugIns
+            cp -r build/Release-iphoneos/AutoFillExtension.appex Payload/GameAccountApp.app/PlugIns/ || true
+          fi
+          echo "=== Cấu trúc thư mục PlugIns ==="
+          ls -la Payload/GameAccountApp.app/PlugIns/ || true
+          echo "=== Chi tiết Info.plist của AutoFillExtension ==="
+          cat Payload/GameAccountApp.app/PlugIns/AutoFillExtension.appex/Info.plist || true
           zip -r GameAccountApp.ipa Payload
 
       - name: Xuất file IPA

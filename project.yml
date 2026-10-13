@@ -9,6 +9,7 @@ targets:
     sources: [App]
     dependencies:
       - target: AutoFillExtension
+        embed: true
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: "com.ban.GameAccountApp"
@@ -24,13 +25,16 @@ targets:
     type: app-extension
     platform: iOS
     deploymentTarget: "15.0"
-    sources: [Extension]
+    info:
+      path: Extension/Info.plist
+    sources:
+      - path: Extension
+        excludes:
+          - "Info.plist"
+          - "*.entitlements"
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: "com.ban.GameAccountApp.AutoFillExtension"
-        GENERATE_INFOPLIST_FILE: "YES"
-        INFOPLIST_KEY_NSExtension_NSExtensionPointIdentifier: "com.apple.authentication-services-credential-provider-ui"
-        INFOPLIST_KEY_NSExtension_NSExtensionPrincipalClass: "$(PRODUCT_MODULE_NAME).CredentialProviderViewController"
-        NSExtensionPointIdentifier: "com.apple.authentication-services-credential-provider-ui"
+        GENERATE_INFOPLIST_FILE: "NO"
         # Bật App Groups cho Extension
         CODE_SIGN_ENTITLEMENTS: "Extension/AutoFillExtension.entitlements"
