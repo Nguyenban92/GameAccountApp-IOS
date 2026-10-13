@@ -80,8 +80,8 @@ struct ContentView: View {
 
     var body: some View {
         ZStack {
-            // Dark luxury background
-            Color(red: 0.04, green: 0.05, blue: 0.08).edgesIgnoringSafeArea(.all)
+            // Dark Tactical Carbon background
+            Color(red: 0.04, green: 0.06, blue: 0.05).edgesIgnoringSafeArea(.all)
             
             VStack(spacing: 0) {
                 // Top Header Bar
@@ -159,24 +159,25 @@ struct ContentView: View {
         .sheet(isPresented: $showingAutoFillGuide) { autoFillGuideSheetView }
     }
     
-    // MARK: - Top Header View
+    // MARK: - Top Header View (Tactical E-Sports Theme)
     var topHeaderView: some View {
         HStack {
             HStack(spacing: 8) {
                 ZStack {
-                    LinearGradient(colors: [Color.cyan, Color.indigo], startPoint: .topLeading, endPoint: .bottomTrailing)
+                    LinearGradient(colors: [Color(red: 0.0, green: 0.85, blue: 0.55), Color(red: 0.0, green: 0.5, blue: 0.9)], startPoint: .topLeading, endPoint: .bottomTrailing)
                     Text("🎮").font(.system(size: 16))
                 }
-                .frame(width: 32, height: 32)
+                .frame(width: 34, height: 34)
                 .cornerRadius(10)
+                .shadow(color: Color(red: 0.0, green: 0.85, blue: 0.55).opacity(0.3), radius: 6, x: 0, y: 2)
                 
                 VStack(alignment: .leading, spacing: 1) {
-                    Text("Game Manager")
-                        .font(.system(size: 16, weight: .bold, design: .rounded))
+                    Text("QUẢN LÝ TÀI KHOẢN")
+                        .font(.system(size: 14, weight: .heavy, design: .rounded))
                         .foregroundColor(.white)
-                    Text("Auto-Login Suite")
-                        .font(.system(size: 10, weight: .medium, design: .monospaced))
-                        .foregroundColor(.gray)
+                    Text("E-Sports Tactical Suite")
+                        .font(.system(size: 9, weight: .medium, design: .monospaced))
+                        .foregroundColor(Color(red: 0.0, green: 0.85, blue: 0.55))
                 }
             }
             
@@ -194,12 +195,12 @@ struct ContentView: View {
                         Text("Liên Hệ Zalo")
                     }
                     .font(.system(size: 11, weight: .bold))
-                    .foregroundColor(Color(red: 0.2, green: 0.7, blue: 1.0))
+                    .foregroundColor(Color(red: 0.0, green: 0.9, blue: 0.6))
                     .padding(.horizontal, 9)
                     .padding(.vertical, 6)
-                    .background(Color(red: 0.0, green: 0.45, blue: 0.95).opacity(0.18))
+                    .background(Color(red: 0.0, green: 0.8, blue: 0.5).opacity(0.18))
                     .cornerRadius(10)
-                    .overlay(RoundedRectangle(cornerRadius: 10).stroke(Color(red: 0.2, green: 0.7, blue: 1.0).opacity(0.4), lineWidth: 1))
+                    .overlay(RoundedRectangle(cornerRadius: 10).stroke(Color(red: 0.0, green: 0.85, blue: 0.55).opacity(0.4), lineWidth: 1))
                 }
                 
                 Button(action: { showingAutoFillGuide = true }) {
@@ -222,12 +223,12 @@ struct ContentView: View {
                         Text("Game Mới")
                     }
                     .font(.system(size: 11, weight: .semibold))
-                    .foregroundColor(.cyan)
+                    .foregroundColor(Color(red: 0.0, green: 0.85, blue: 0.55))
                     .padding(.horizontal, 8)
                     .padding(.vertical, 6)
-                    .background(Color(red: 0.08, green: 0.11, blue: 0.18))
+                    .background(Color(red: 0.06, green: 0.09, blue: 0.08))
                     .cornerRadius(10)
-                    .overlay(RoundedRectangle(cornerRadius: 10).stroke(Color.cyan.opacity(0.3), lineWidth: 1))
+                    .overlay(RoundedRectangle(cornerRadius: 10).stroke(Color(red: 0.0, green: 0.85, blue: 0.55).opacity(0.3), lineWidth: 1))
                 }
             }
         }
@@ -549,7 +550,7 @@ struct ContentView: View {
         }
     }
     
-    // MARK: - Copy Format Selector Bar
+    // MARK: - Copy Format Selector Bar (Tactical E-Sports)
     var copyFormatSelectorBar: some View {
         HStack(spacing: 8) {
             Text("Định dạng dán:")
@@ -566,11 +567,12 @@ struct ContentView: View {
                     Text("1 Khoảng trắng")
                         .font(.system(size: 10, weight: .bold))
                 }
-                .foregroundColor(copyFormat == "space" ? .cyan : .gray)
+                .foregroundColor(copyFormat == "space" ? Color(red: 0.0, green: 0.9, blue: 0.6) : .gray)
                 .padding(.horizontal, 7)
                 .padding(.vertical, 4)
-                .background(copyFormat == "space" ? Color.cyan.opacity(0.15) : Color.white.opacity(0.04))
+                .background(copyFormat == "space" ? Color(red: 0.0, green: 0.8, blue: 0.5).opacity(0.18) : Color.white.opacity(0.04))
                 .cornerRadius(6)
+                .overlay(RoundedRectangle(cornerRadius: 6).stroke(copyFormat == "space" ? Color(red: 0.0, green: 0.85, blue: 0.55).opacity(0.4) : Color.clear, lineWidth: 1))
             }
             
             Button(action: {
@@ -583,11 +585,12 @@ struct ContentView: View {
                     Text("Dấu gạch |")
                         .font(.system(size: 10, weight: .bold))
                 }
-                .foregroundColor(copyFormat == "pipe" ? .orange : .gray)
+                .foregroundColor(copyFormat == "pipe" ? .cyan : .gray)
                 .padding(.horizontal, 7)
                 .padding(.vertical, 4)
-                .background(copyFormat == "pipe" ? Color.orange.opacity(0.15) : Color.white.opacity(0.04))
+                .background(copyFormat == "pipe" ? Color.cyan.opacity(0.18) : Color.white.opacity(0.04))
                 .cornerRadius(6)
+                .overlay(RoundedRectangle(cornerRadius: 6).stroke(copyFormat == "pipe" ? Color.cyan.opacity(0.4) : Color.clear, lineWidth: 1))
             }
             
             Spacer()
@@ -635,10 +638,10 @@ struct ContentView: View {
                         // Số thứ tự tài khoản
                         Text("#\(index)")
                             .font(.system(size: 11, weight: .heavy, design: .monospaced))
-                            .foregroundColor(.cyan)
+                            .foregroundColor(Color(red: 0.0, green: 0.9, blue: 0.55))
                             .padding(.horizontal, 6)
                             .padding(.vertical, 2)
-                            .background(Color.cyan.opacity(0.18))
+                            .background(Color(red: 0.0, green: 0.8, blue: 0.5).opacity(0.18))
                             .cornerRadius(6)
                         
                         Text(acc.username)
@@ -671,12 +674,12 @@ struct ContentView: View {
                             Text("Copy")
                         }
                         .font(.system(size: 10, weight: .bold))
-                        .foregroundColor(.green)
+                        .foregroundColor(Color(red: 0.0, green: 0.9, blue: 0.55))
                         .padding(.horizontal, 7)
                         .padding(.vertical, 4)
-                        .background(Color.green.opacity(0.12))
+                        .background(Color(red: 0.0, green: 0.8, blue: 0.5).opacity(0.15))
                         .cornerRadius(6)
-                        .overlay(RoundedRectangle(cornerRadius: 6).stroke(Color.green.opacity(0.3), lineWidth: 1))
+                        .overlay(RoundedRectangle(cornerRadius: 6).stroke(Color(red: 0.0, green: 0.85, blue: 0.55).opacity(0.35), lineWidth: 1))
                     }
                     
                     // Sửa thông tin tài khoản
@@ -700,12 +703,12 @@ struct ContentView: View {
                             Image(systemName: "arrow.right")
                         }
                         .font(.system(size: 11, weight: .bold))
-                        .foregroundColor(.cyan)
+                        .foregroundColor(Color(red: 0.0, green: 0.9, blue: 0.55))
                         .padding(.horizontal, 9)
                         .padding(.vertical, 4)
-                        .background(Color.cyan.opacity(0.15))
+                        .background(Color(red: 0.0, green: 0.8, blue: 0.5).opacity(0.15))
                         .cornerRadius(8)
-                        .overlay(RoundedRectangle(cornerRadius: 8).stroke(Color.cyan.opacity(0.3), lineWidth: 1))
+                        .overlay(RoundedRectangle(cornerRadius: 8).stroke(Color(red: 0.0, green: 0.85, blue: 0.55).opacity(0.3), lineWidth: 1))
                     }
                     
                     Button(action: { deleteAccount(acc) }) {
@@ -736,13 +739,13 @@ struct ContentView: View {
             }
         }
         .padding(12)
-        .background(Color(red: 0.08, green: 0.11, blue: 0.18))
+        .background(Color(red: 0.06, green: 0.09, blue: 0.08))
         .cornerRadius(12)
         .overlay(
             RoundedRectangle(cornerRadius: 12)
-                .stroke(isCurrentInQueue ? Color.cyan : Color.white.opacity(0.06), lineWidth: isCurrentInQueue ? 1.5 : 1)
+                .stroke(isCurrentInQueue ? Color(red: 0.0, green: 0.9, blue: 0.55) : Color.white.opacity(0.06), lineWidth: isCurrentInQueue ? 1.5 : 1)
         )
-        .shadow(color: isCurrentInQueue ? Color.cyan.opacity(0.25) : Color.clear, radius: 8, x: 0, y: 2)
+        .shadow(color: isCurrentInQueue ? Color(red: 0.0, green: 0.9, blue: 0.55).opacity(0.25) : Color.clear, radius: 8, x: 0, y: 2)
         .onTapGesture(count: 2) {
             openEditAccountModal(acc: acc)
         }
@@ -1218,8 +1221,8 @@ struct ContentView: View {
         NavigationView {
             VStack(spacing: 16) {
                 Text("Nhập vào game: \(currentGame?.title ?? "")")
-                    .font(.system(size: 14, weight: .bold))
-                    .foregroundColor(.cyan)
+                    .font(.system(size: 15, weight: .bold))
+                    .foregroundColor(Color(red: 0.0, green: 0.85, blue: 0.55))
                     .padding(.top)
                 
                 // Button 1: UIDocumentPickerViewController
@@ -1234,17 +1237,18 @@ struct ContentView: View {
                         Text("Chọn Tệp TXT Từ Files")
                     }
                     .font(.system(size: 14, weight: .bold))
-                    .foregroundColor(.white)
+                    .foregroundColor(.black)
                     .frame(maxWidth: .infinity)
                     .padding()
-                    .background(LinearGradient(colors: [Color.cyan, Color.blue], startPoint: .leading, endPoint: .trailing))
+                    .background(LinearGradient(colors: [Color(red: 0.0, green: 0.85, blue: 0.55), Color.cyan], startPoint: .leading, endPoint: .trailing))
                     .cornerRadius(12)
+                    .shadow(color: Color(red: 0.0, green: 0.85, blue: 0.55).opacity(0.3), radius: 6, x: 0, y: 3)
                 }
                 .padding(.horizontal)
                 
                 HStack {
                     Rectangle().frame(height: 1).foregroundColor(.gray.opacity(0.3))
-                    Text("HOẶC DÁN TRỰC TIẾP").font(.caption).foregroundColor(.gray)
+                    Text("HOẶC DÁN NỘI DUNG VĂN BẢN").font(.caption).foregroundColor(.gray)
                     Rectangle().frame(height: 1).foregroundColor(.gray.opacity(0.3))
                 }
                 .padding(.horizontal)
@@ -1255,22 +1259,28 @@ struct ContentView: View {
                         .padding(8)
                         .background(Color(UIColor.secondarySystemBackground))
                         .cornerRadius(8)
-                        .frame(height: 150)
+                        .frame(height: 140)
                     
-                    Text("Hỗ trợ định dạng mỗi dòng: user,pass hoặc user|pass")
-                        .font(.system(size: 10))
-                        .foregroundColor(.gray)
+                    VStack(alignment: .leading, spacing: 3) {
+                        Text("⚡ Tự động nhận diện thông minh mọi định dạng TXT:")
+                            .font(.system(size: 11, weight: .bold))
+                            .foregroundColor(Color(red: 0.0, green: 0.85, blue: 0.55))
+                        Text("• Dòng dài chứa UID, NAME, LEVEL, SKIN... (tự lọc lấy ID|Pass)\n• Dạng: user|pass|email (tự bỏ email đuôi)\n• Dạng: user:pass hoặc user,pass hoặc user pass")
+                            .font(.system(size: 10))
+                            .foregroundColor(.gray)
+                    }
                 }
                 .padding(.horizontal)
                 
                 Button(action: { parseAndImportPasteText() }) {
                     Text("Nhận Diện & Nạp Vào Game")
-                        .font(.system(size: 13, weight: .semibold))
+                        .font(.system(size: 14, weight: .bold))
                         .foregroundColor(.white)
                         .frame(maxWidth: .infinity)
-                        .padding(12)
-                        .background(Color.green)
+                        .padding(13)
+                        .background(Color(red: 0.0, green: 0.7, blue: 0.45))
                         .cornerRadius(10)
+                        .shadow(color: Color.green.opacity(0.3), radius: 6, x: 0, y: 2)
                 }
                 .padding(.horizontal)
                 
@@ -1281,35 +1291,117 @@ struct ContentView: View {
         }
     }
     
+    // MARK: - Smart Account Parser from TXT
+    func parseSmartAccountLine(_ rawLine: String) -> (username: String, password: String, rank: String)? {
+        let line = rawLine.trimmingCharacters(in: .whitespacesAndNewlines)
+        if line.isEmpty { return nil }
+        
+        // Skip header lines
+        if line.lowercased().starts(with: "title,") || line.lowercased().starts(with: "username,") { return nil }
+        
+        // Trích xuất RANK nếu có trong dòng thông tin (vd: RANK : Đại Cao Thủ IV [10 Sao])
+        var extractedRank = "Lv. 1"
+        if let rankRange = line.range(of: "(?i)RANK\\s*:\\s*([^|\r\n]+)", options: .regularExpression) {
+            let rankSub = String(line[rankRange])
+            let rankParts = rankSub.components(separatedBy: ":")
+            if rankParts.count >= 2 {
+                extractedRank = rankParts[1].trimmingCharacters(in: .whitespaces)
+            }
+        }
+        
+        // TRƯỜNG HỢP 1: Phân cách bằng dấu gạch đứng '|'
+        if line.contains("|") {
+            let segments = line.components(separatedBy: "|").map { $0.trimmingCharacters(in: .whitespaces) }.filter { !$0.isEmpty }
+            
+            // TH 1A: user|pass| UID : ... hoặc user|pass|email
+            if segments.count >= 2 {
+                let first = segments[0]
+                let second = segments[1]
+                let isFirstLabel = first.contains(":") || first.lowercased().starts(with: "uid") || first.lowercased().starts(with: "name")
+                let isSecondLabel = second.contains(":") || second.lowercased().starts(with: "uid") || second.lowercased().starts(with: "name")
+                
+                if !isFirstLabel && !isSecondLabel && !first.isEmpty && !second.isEmpty {
+                    return (first, second, extractedRank)
+                }
+            }
+            
+            // TH 1B: Nếu có chữ "UID" và user|pass nằm sau hoặc trước UID
+            if let uidIndex = segments.firstIndex(where: { $0.lowercased().contains("uid") }) {
+                // Nằm sau UID
+                if uidIndex + 1 < segments.count {
+                    let nextSeg = segments[uidIndex + 1]
+                    if nextSeg.contains(":") {
+                        let sub = nextSeg.components(separatedBy: ":")
+                        if sub.count == 2 {
+                            return (sub[0].trimmingCharacters(in: .whitespaces), sub[1].trimmingCharacters(in: .whitespaces), extractedRank)
+                        }
+                    }
+                    if uidIndex + 2 < segments.count {
+                        let u = segments[uidIndex + 1]
+                        let p = segments[uidIndex + 2]
+                        if !u.contains(":") && !p.contains(":") {
+                            return (u, p, extractedRank)
+                        }
+                    }
+                }
+                // Nằm trước UID
+                if uidIndex >= 2 {
+                    let u = segments[uidIndex - 2]
+                    let p = segments[uidIndex - 1]
+                    if !u.contains(":") && !p.contains(":") {
+                        return (u, p, extractedRank)
+                    }
+                }
+            }
+            
+            // TH 1C: Lọc tất cả các segment không chứa nhãn ':'
+            let candidateSegs = segments.filter { seg in
+                !seg.contains(":") && !seg.contains("@") && !seg.lowercased().contains("cccd") && !seg.lowercased().contains("region")
+            }
+            if candidateSegs.count >= 2 {
+                return (candidateSegs[0], candidateSegs[1], extractedRank)
+            }
+        }
+        
+        // TRƯỜNG HỢP 2: Phân cách bằng dấu hai chấm ':' (vd: tvnk.17328:uhuBCTu62@)
+        if line.contains(":") && !line.lowercased().starts(with: "http") {
+            let parts = line.components(separatedBy: ":").map { $0.trimmingCharacters(in: .whitespaces) }
+            if parts.count == 2 && !parts[0].isEmpty && !parts[1].isEmpty {
+                return (parts[0], parts[1], extractedRank)
+            }
+        }
+        
+        // TRƯỜNG HỢP 3: Phân cách bằng dấu phẩy ',' (vd: tvnk.173228,uhuBCTu62@)
+        if line.contains(",") {
+            let parts = line.components(separatedBy: ",").map { $0.trimmingCharacters(in: .whitespaces) }
+            if parts.count >= 2 && !parts[0].isEmpty && !parts[1].isEmpty {
+                return (parts[0], parts[1], extractedRank)
+            }
+        }
+        
+        // TRƯỜNG HỢP 4: Phân cách bằng khoảng trắng hoặc Tab (vd: tvnk.17328 uhuBCTu62@)
+        let whiteParts = line.components(separatedBy: .whitespaces).filter { !$0.trimmingCharacters(in: .whitespaces).isEmpty }
+        if whiteParts.count == 2 {
+            return (whiteParts[0], whiteParts[1], extractedRank)
+        }
+        
+        return nil
+    }
+    
     func parseAndImportPasteText() {
         let lines = importPasteText.components(separatedBy: .newlines)
         var count = 0
         guard selectedGameIndex < games.count else { return }
         
         for line in lines {
-            let trimmed = line.trimmingCharacters(in: .whitespacesAndNewlines)
-            if trimmed.isEmpty { continue }
-            
-            var user = ""
-            var pass = ""
-            if trimmed.contains(",") {
-                let parts = trimmed.components(separatedBy: ",")
-                if parts.count >= 2 {
-                    user = parts[0].trimmingCharacters(in: .whitespaces)
-                    pass = parts[1].trimmingCharacters(in: .whitespaces)
-                }
-            } else if trimmed.contains("|") {
-                let parts = trimmed.components(separatedBy: "|")
-                if parts.count >= 2 {
-                    user = parts[0].trimmingCharacters(in: .whitespaces)
-                    pass = parts[1].trimmingCharacters(in: .whitespaces)
-                }
-            }
-            
-            if !user.isEmpty && !pass.isEmpty {
-                games[selectedGameIndex].accounts.append(
-                    GameAccount(username: user, password: pass, server: games[selectedGameIndex].server)
+            if let result = parseSmartAccountLine(line) {
+                let acc = GameAccount(
+                    username: result.username,
+                    password: result.password,
+                    server: games[selectedGameIndex].server,
+                    levelOrRank: result.rank.isEmpty ? "Lv. 1" : result.rank
                 )
+                games[selectedGameIndex].accounts.append(acc)
                 count += 1
             }
         }
@@ -1317,7 +1409,11 @@ struct ContentView: View {
         saveCurrentState()
         importPasteText = ""
         showingImportSheet = false
-        showToast("Đã nạp thành công \(count) tài khoản!")
+        if count > 0 {
+            showToast("Đã nạp thành công \(count) tài khoản!")
+        } else {
+            showToast("Không tìm thấy tài khoản hợp lệ trong nội dung")
+        }
     }
     
     // MARK: - Export Sheet
