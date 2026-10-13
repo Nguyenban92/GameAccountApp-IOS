@@ -149,24 +149,36 @@ struct ContentView: View {
     }
     
     // MARK: - Top Header View (Clean & Professional)
+    // MARK: - Top Header View (Clean & Professional, Displays Game Icon)
     var topHeaderView: some View {
         HStack(alignment: .center) {
             HStack(spacing: 8) {
-                ZStack {
-                    LinearGradient(colors: [Color(red: 0.0, green: 0.85, blue: 0.55), Color(red: 0.0, green: 0.5, blue: 0.9)], startPoint: .topLeading, endPoint: .bottomTrailing)
-                    Text("🎮").font(.system(size: 15))
+                if let g = currentGame, let data = g.customImageData, let uiImg = UIImage(data: data) {
+                    Image(uiImage: uiImg)
+                        .resizable()
+                        .scaledToFill()
+                        .frame(width: 32, height: 32)
+                        .cornerRadius(9)
+                        .clipped()
+                        .overlay(RoundedRectangle(cornerRadius: 9).stroke(Color(red: 0.0, green: 0.85, blue: 0.55).opacity(0.6), lineWidth: 1.2))
+                } else {
+                    ZStack {
+                        LinearGradient(colors: [Color(red: 0.0, green: 0.85, blue: 0.55), Color(red: 0.0, green: 0.5, blue: 0.9)], startPoint: .topLeading, endPoint: .bottomTrailing)
+                        Text("🎮").font(.system(size: 15))
+                    }
+                    .frame(width: 32, height: 32)
+                    .cornerRadius(9)
                 }
-                .frame(width: 32, height: 32)
-                .cornerRadius(9)
                 
                 VStack(alignment: .leading, spacing: 0) {
                     Text("QUẢN LÝ TÀI KHOẢN")
                         .font(.system(size: 14, weight: .heavy, design: .rounded))
                         .foregroundColor(.white)
                         .lineLimit(1)
-                    Text("Game Account Suite")
+                    Text(currentGame?.title ?? "Game Account Suite")
                         .font(.system(size: 9, weight: .medium, design: .monospaced))
                         .foregroundColor(Color(red: 0.0, green: 0.85, blue: 0.55))
+                        .lineLimit(1)
                 }
             }
             
@@ -194,10 +206,10 @@ struct ContentView: View {
         }
     }
     
-    // MARK: - Game Tabs (Clean Horizontal Chips)
+    // MARK: - Game Carousel View (Hiển Thị Rõ Nét Hình Ảnh Tựa Game)
     var gameCarouselView: some View {
         ScrollView(.horizontal, showsIndicators: false) {
-            HStack(spacing: 8) {
+            HStack(spacing: 12) {
                 ForEach(games.indices, id: \.self) { idx in
                     let g = games[idx]
                     let isSelected = idx == selectedGameIndex
@@ -206,30 +218,57 @@ struct ContentView: View {
                         selectedGameIndex = idx
                         SharedDataManager.shared.saveActiveGameId(g.id)
                     }) {
-                        HStack(spacing: 5) {
-                            Text(g.title.lowercased().contains("liên quân") ? "⚔️" : (g.title.lowercased().contains("free fire") ? "🔥" : "🎮"))
-                                .font(.system(size: 12))
+                        VStack(spacing: 5) {
+                            // Ô Ảnh Bìa Game Vuông 1:1
+                            ZStack(alignment: .bottomTrailing) {
+                                if let data = g.customImageData, let uiImg = UIImage(data: data) {
+                                    Image(uiImage: uiImg)
+                                        .resizable()
+                                        .scaledToFill()
+                                        .frame(width: 68, height: 68)
+                                        .clipped()
+                                } else {
+                                    LinearGradient(
+                                        colors: [Color(red: 0.08, green: 0.16, blue: 0.22), Color(red: 0.04, green: 0.08, blue: 0.12)],
+                                        startPoint: .topLeading,
+                                        endPoint: .bottomTrailing
+                                    )
+                                    .frame(width: 68, height: 68)
+                                    .overlay(
+                                        Text(g.title.lowercased().contains("liên quân") ? "⚔️" : (g.title.lowercased().contains("free fire") ? "🔥" : "🎮"))
+                                            .font(.system(size: 26))
+                                    )
+                                }
+                                
+                                // Badge số lượng tài khoản trong game
+                                Text("\(g.accounts.count)")
+                                    .font(.system(size: 9, weight: .heavy, design: .monospaced))
+                                    .foregroundColor(.white)
+                                    .padding(.horizontal, 5)
+                                    .padding(.vertical, 2)
+                                    .background(Color.black.opacity(0.8))
+                                    .cornerRadius(5)
+                                    .padding(4)
+                            }
+                            .cornerRadius(14)
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 14)
+                                    .stroke(isSelected ? Color(red: 0.0, green: 0.9, blue: 0.55) : Color.white.opacity(0.1), lineWidth: isSelected ? 2 : 1)
+                            )
+                            .shadow(color: isSelected ? Color(red: 0.0, green: 0.9, blue: 0.55).opacity(0.35) : Color.clear, radius: 6, x: 0, y: 2)
+                            
+                            // Tên Game
                             Text(g.title)
-                                .font(.system(size: 12, weight: isSelected ? .bold : .medium))
+                                .font(.system(size: 11, weight: isSelected ? .bold : .medium))
+                                .foregroundColor(isSelected ? Color(red: 0.0, green: 0.95, blue: 0.6) : .gray)
                                 .lineLimit(1)
-                            Text("(\(g.accounts.count))")
-                                .font(.system(size: 10, weight: .bold, design: .monospaced))
-                                .opacity(0.85)
+                                .frame(width: 70)
                         }
-                        .foregroundColor(isSelected ? .white : .gray)
-                        .padding(.horizontal, 12)
-                        .padding(.vertical, 7)
-                        .background(isSelected ? Color(red: 0.0, green: 0.75, blue: 0.45) : Color.white.opacity(0.06))
-                        .cornerRadius(20)
-                        .overlay(
-                            RoundedRectangle(cornerRadius: 20)
-                                .stroke(isSelected ? Color(red: 0.0, green: 0.9, blue: 0.6) : Color.white.opacity(0.08), lineWidth: 1)
-                        )
-                        .fixedSize()
                     }
+                    .buttonStyle(PlainButtonStyle())
                     .contextMenu {
                         Button(action: { openEditGameModal(game: g) }) {
-                            Label("Sửa thông tin / Đổi tên", systemImage: "pencil")
+                            Label("Đổi ảnh đại diện / Sửa game", systemImage: "photo")
                         }
                         Button(action: {
                             AppLauncher.shared.launchGame(scheme: g.urlScheme, bundleID: g.bundleID, gameName: g.title) { _, msg in
@@ -241,23 +280,37 @@ struct ContentView: View {
                     }
                 }
                 
-                // Nút Thêm Game Mới
+                // Nút + Thêm Game Mới
                 Button(action: { openAddGameModal() }) {
-                    HStack(spacing: 4) {
-                        Image(systemName: "plus")
+                    VStack(spacing: 5) {
+                        ZStack {
+                            RoundedRectangle(cornerRadius: 14)
+                                .stroke(style: StrokeStyle(lineWidth: 1.5, dash: [4]))
+                                .foregroundColor(Color(red: 0.0, green: 0.85, blue: 0.55).opacity(0.45))
+                                .frame(width: 68, height: 68)
+                                .background(Color.white.opacity(0.02).cornerRadius(14))
+                            
+                            VStack(spacing: 3) {
+                                Image(systemName: "plus")
+                                    .font(.system(size: 18, weight: .bold))
+                                    .foregroundColor(Color(red: 0.0, green: 0.85, blue: 0.55))
+                                Text("Thêm")
+                                    .font(.system(size: 9.5, weight: .semibold))
+                                    .foregroundColor(.gray)
+                            }
+                        }
+                        
                         Text("Game Mới")
+                            .font(.system(size: 11, weight: .medium))
+                            .foregroundColor(.gray.opacity(0.7))
+                            .lineLimit(1)
+                            .frame(width: 70)
                     }
-                    .font(.system(size: 11, weight: .semibold))
-                    .foregroundColor(Color(red: 0.0, green: 0.85, blue: 0.55))
-                    .padding(.horizontal, 10)
-                    .padding(.vertical, 7)
-                    .background(Color.white.opacity(0.05))
-                    .cornerRadius(20)
-                    .overlay(RoundedRectangle(cornerRadius: 20).stroke(Color.white.opacity(0.1), lineWidth: 1))
-                    .fixedSize()
                 }
+                .buttonStyle(PlainButtonStyle())
             }
             .padding(.horizontal)
+            .padding(.vertical, 2)
         }
     }
     
